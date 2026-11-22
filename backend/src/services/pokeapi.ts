@@ -1,14 +1,22 @@
 import axios, { AxiosError, isAxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { setTimeout as sleep } from 'node:timers/promises'
 import type { DamageRelation, Evolution, Pokemon, Resistance } from '../types/pokemon.ts'
+import { limitConcurrency } from './limitConcurrency.ts'
 
 const POKEAPI_URL = 'https://pokeapi.co/api/v2'
 const RETRY_BASE_DELAY_MS = 200
 const MAX_RETRIES = 3
+// Stays polite with PokeAPI while the full Pokédex build fires thousands of requests
+const MAX_REQUESTS_IN_FLIGHT = 10
+
+const defaultAdapter = axios.getAdapter(axios.defaults.adapter)
+const limit = limitConcurrency(MAX_REQUESTS_IN_FLIGHT)
 
 /** PokeAPI client: every request is retried with exponential backoff on transient failures */
 export const pokeapi = axios.create({
 	baseURL: POKEAPI_URL,
+	// Throttled at the adapter so retries queue for a slot too, while their backoff waits outside it
+	adapter: config => limit(() => defaultAdapter(config)),
 	// Without it a stalled connection hangs forever instead of failing and being retried
 	timeout: 10_000
 })
