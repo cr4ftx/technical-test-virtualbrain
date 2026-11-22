@@ -1,4 +1,4 @@
-/** Mirrors the backend `BattleMode` (backend/src/services/battleRequest.ts) */
+/** Mirrors the backend `BattleMode` (backend/src/services/battleMode.ts): the `BATTLE_MODE` the backend runs with */
 export type BattleMode = "one-shot" | "turn-based";
 
 export type Side = 0 | 1;
