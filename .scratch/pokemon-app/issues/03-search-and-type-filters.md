@@ -10,7 +10,7 @@
 - [x] 18 type chips (fire, water, …); selecting chips keeps only Pokémon having all selected types (AND)
 - [x] At most 2 types can be selected at once (no Pokémon has 3)
 - [x] Search and type filters combine; a clear action resets both
-- [x] An empty result shows a "No Pokémon found" message
+- [x] An empty result shows a "No Pokemon found" message
 - [x] Filter logic is a pure function with unit tests (case, substring, AND, combination)
 - [x] The filter bar stays usable on mobile
 

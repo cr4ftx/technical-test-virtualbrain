@@ -7,7 +7,7 @@ interface PokemonListProps {
 
 export default function PokemonList({ pokemons }: PokemonListProps) {
   if (pokemons.length === 0) {
-    return <div className="text-lg text-center w-full p-8">No Pokémon found</div>;
+    return <div className="text-lg text-center w-full p-8">No Pokemon found</div>;
   }
 
   return (
