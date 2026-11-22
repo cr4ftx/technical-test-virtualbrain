@@ -4,6 +4,7 @@ import type { DamageRelation, Evolution, Pokemon, Resistance } from '../types/po
 
 const POKEAPI_URL = 'https://pokeapi.co/api/v2'
 const RETRY_BASE_DELAY_MS = 200
+const MAX_RETRIES = 3
 
 export const pokeapi = axios.create({ baseURL: POKEAPI_URL })
 
@@ -15,6 +16,8 @@ pokeapi.interceptors.response.use(undefined, async (error: unknown) => {
 	if (status === undefined || status < 500) throw error
 
 	const retryCount = config.retryCount ?? 0
+	if (retryCount >= MAX_RETRIES) throw error
+
 	config.retryCount = retryCount + 1
 	await sleep(RETRY_BASE_DELAY_MS * 2 ** retryCount)
 	return pokeapi.request(config)

@@ -52,4 +52,14 @@ describe('pokeapi retries', () => {
 		expect(result).toMatchObject({ value: { status: 200 } })
 		expect(adapter).toHaveBeenCalledTimes(2)
 	})
+
+	it('gives up after 3 retries with the last upstream error', async () => {
+		const adapter = scriptedAdapter([500, 502, 503, 504, 200])
+		pokeapi.defaults.adapter = adapter
+
+		const result = await settle(pokeapi.get('/pokemon/1'))
+
+		expect(result).toMatchObject({ error: { response: { status: 504 } } })
+		expect(adapter).toHaveBeenCalledTimes(4)
+	})
 })
