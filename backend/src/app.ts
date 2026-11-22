@@ -4,6 +4,7 @@ import express from 'express'
 import { ContentController } from './controllers/ContentsController.ts'
 import { PokemonController } from './controllers/PokemonController.ts'
 import { errorHandler } from './middlewares/errorHandler.ts'
+import { pokedex } from './services/pokedex.ts'
 
 const PORT = Number(process.env.PORT ?? 3001)
 
@@ -30,3 +31,9 @@ app.use(errorHandler)
 app.listen(PORT, () => {
 	console.log(`Server started on http://localhost:${PORT}`)
 })
+
+// Warm up in the background: a cold build takes a minute or two, a failed one is retried by the next request
+pokedex.load().then(
+	pokemons => console.log(`Pokédex ready: ${pokemons.length} pokemons`),
+	(error: unknown) => console.error('Pokédex build failed:', error instanceof Error ? error.message : error)
+)

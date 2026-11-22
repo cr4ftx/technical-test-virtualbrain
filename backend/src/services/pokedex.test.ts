@@ -58,4 +58,16 @@ describe('pokedex store', () => {
 		expect(await store.load()).toEqual([bulbasaur])
 		expect(build).toHaveBeenCalledTimes(2)
 	})
+
+	it('peeks at the dataset only once it is loaded, without waiting for a build', async () => {
+		const { promise, resolve } = Promise.withResolvers<Pokemon[]>()
+		const store = createPokedexStore({ cacheFile, build: () => promise })
+
+		const loading = store.load()
+		expect(store.peek()).toBeUndefined()
+
+		resolve([bulbasaur])
+		await loading
+		expect(store.peek()).toEqual([bulbasaur])
+	})
 })
