@@ -1,15 +1,9 @@
-import { useState } from "react";
+import { useBattleMode } from "../hooks/useBattleMode";
 import { useBattleStream } from "../hooks/useBattleStream";
-import type { BattleMode } from "../types/battle";
 import type { PokemonSummary } from "../types/pokemon";
 import { Fighter } from "./Fighter";
 import { useTheme } from "./ThemeContext";
 import { TurnBasedBattle } from "./TurnBasedBattle";
-
-const MODES: { mode: BattleMode; label: string }[] = [
-  { mode: "one-shot", label: "One-shot" },
-  { mode: "turn-based", label: "Turn-based" },
-];
 
 interface ArenaProps {
   first: PokemonSummary;
@@ -61,40 +55,42 @@ function OneShotBattle({ first, second }: Omit<ArenaProps, "onBack">) {
 }
 
 export function Arena({ first, second, onBack }: ArenaProps) {
-  const [mode, setMode] = useState<BattleMode>("one-shot");
+  // The backend decides how battles are played (BATTLE_MODE)
+  const { state, retry } = useBattleMode();
 
   return (
     <div className="w-full max-w-4xl p-4 flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={onBack}
-          className="rounded-lg border border-orange-400 px-3 py-2 hover:bg-orange-400/20"
-        >
-          ← Back to the Pokédex
-        </button>
-        {/* Switching mode unmounts the running battle, which aborts its requests */}
-        <div role="radiogroup" aria-label="Battle mode" className="flex rounded-lg border border-orange-400 overflow-hidden">
-          {MODES.map(({ mode: value, label }) => (
-            <button
-              key={value}
-              type="button"
-              role="radio"
-              aria-checked={mode === value}
-              onClick={() => setMode(value)}
-              className={`px-3 py-2 ${mode === value ? "bg-orange-500 text-white font-bold" : "hover:bg-orange-400/20"}`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <button
+        type="button"
+        onClick={onBack}
+        className="self-start rounded-lg border border-orange-400 px-3 py-2 hover:bg-orange-400/20"
+      >
+        ← Back to the Pokédex
+      </button>
 
-      {mode === "one-shot" ? (
-        <OneShotBattle first={first} second={second} />
-      ) : (
-        <TurnBasedBattle first={first} second={second} />
+      {state.status === "loading" && (
+        <p role="status" className="opacity-70 text-center">
+          Preparing the arena...
+        </p>
       )}
+      {state.status === "error" && (
+        <div role="alert" className="flex flex-wrap items-center justify-center gap-3 text-red-500">
+          <span>{state.message}</span>
+          <button
+            type="button"
+            onClick={retry}
+            className="rounded-lg bg-orange-500 px-4 py-1 font-bold text-white hover:bg-orange-600"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+      {state.status === "success" &&
+        (state.mode === "one-shot" ? (
+          <OneShotBattle first={first} second={second} />
+        ) : (
+          <TurnBasedBattle first={first} second={second} />
+        ))}
     </div>
   );
 }

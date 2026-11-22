@@ -43,7 +43,7 @@ export function useTurnBasedBattle(firstId: number, secondId: number) {
     api
       .post<{ battleId: string; fighters: [BattleFighter, BattleFighter] }>(
         "/battles",
-        { pokemonIds: [firstId, secondId], mode: "turn-based" },
+        { pokemonIds: [firstId, secondId] },
         { signal: current.signal }
       )
       .then(({ data }) => setState({ status: "ready", battle: { id: data.battleId, fighters: data.fighters }, rounds: [] }))
