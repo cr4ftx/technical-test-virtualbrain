@@ -1,4 +1,4 @@
-import axios, { isAxiosError, type InternalAxiosRequestConfig } from 'axios'
+import axios, { AxiosError, isAxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { setTimeout as sleep } from 'node:timers/promises'
 import type { DamageRelation, Evolution, Pokemon, Resistance } from '../types/pokemon.ts'
 
@@ -8,12 +8,17 @@ const MAX_RETRIES = 3
 
 export const pokeapi = axios.create({ baseURL: POKEAPI_URL })
 
+/** Network failures (no response, but not a deliberate cancel), rate limiting and server errors */
+const isTransient = (error: AxiosError): boolean => {
+	const status = error.response?.status
+	if (status === undefined) return error.code !== AxiosError.ERR_CANCELED
+	return status === 429 || status >= 500
+}
+
 pokeapi.interceptors.response.use(undefined, async (error: unknown) => {
-	if (!isAxiosError(error) || !error.config) throw error
+	if (!isAxiosError(error) || !error.config || !isTransient(error)) throw error
 
 	const config: InternalAxiosRequestConfig & { retryCount?: number } = error.config
-	const status = error.response?.status
-	if (status === undefined || status < 500) throw error
 
 	const retryCount = config.retryCount ?? 0
 	if (retryCount >= MAX_RETRIES) throw error

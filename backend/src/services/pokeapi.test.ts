@@ -62,4 +62,24 @@ describe('pokeapi retries', () => {
 		expect(result).toMatchObject({ error: { response: { status: 504 } } })
 		expect(adapter).toHaveBeenCalledTimes(4)
 	})
+
+	it('fails a 404 immediately', async () => {
+		const adapter = scriptedAdapter([404, 200])
+		pokeapi.defaults.adapter = adapter
+
+		const result = await settle(pokeapi.get('/pokemon/1'))
+
+		expect(result).toMatchObject({ error: { response: { status: 404 } } })
+		expect(adapter).toHaveBeenCalledTimes(1)
+	})
+
+	it.each<Outcome>([429, 'network-error'])('retries a %s then succeeds', async failure => {
+		const adapter = scriptedAdapter([failure, 200])
+		pokeapi.defaults.adapter = adapter
+
+		const result = await settle(pokeapi.get('/pokemon/1'))
+
+		expect(result).toMatchObject({ value: { status: 200 } })
+		expect(adapter).toHaveBeenCalledTimes(2)
+	})
 })
