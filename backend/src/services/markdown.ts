@@ -21,6 +21,9 @@ const listNames = (items: { name: string }[]): string => items.map(item => capit
 
 const padId = (id: number): string => String(id).padStart(4, '0')
 
+/** e.g. `Pikachu (#0025)`: the note's title, which the battle prompt reuses so the brain retrieves the right note */
+export const pokemonTitle = ({ name, id }: Pokemon): string => `${capitalize(name)} (#${padId(id)})`
+
 const renderMatchups = (resistances: Resistance[]): string[] => {
 	const groups = MATCHUP_GROUPS.flatMap(({ title, multipliers }) => {
 		const rows = multipliers.flatMap(([multiplier, label]) => {
@@ -35,7 +38,7 @@ const renderMatchups = (resistances: Resistance[]): string[] => {
 /** A full Pokémon as a Markdown note, ready to import into VirtualBrain */
 export const renderPokemonMarkdown = (pokemon: Pokemon): string => {
 	const lines = [
-		`# ${capitalize(pokemon.name)} (#${padId(pokemon.id)})`,
+		`# ${pokemonTitle(pokemon)}`,
 		'',
 		`- **Generation:** ${pokemon.apiGeneration}`,
 		`- **Types:** ${listNames(pokemon.apiTypes)}`,

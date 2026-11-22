@@ -33,14 +33,20 @@ const gyarados = pokemon({
 describe('buildBattlePrompt', () => {
 	const prompt = buildBattlePrompt(pikachu, gyarados)
 
-	it('introduces each Pokémon with its name and types', () => {
-		expect(prompt).toContain('Pikachu (electric)')
-		expect(prompt).toContain('Gyarados (water/flying)')
+	it('names each Pokémon the way its exported note is titled, so the brain retrieves it', () => {
+		expect(prompt).toContain('Pikachu (#0025)')
+		expect(prompt).toContain('Gyarados (#0130)')
 	})
 
-	it('lists each Pokémon\'s base stats', () => {
-		expect(prompt).toContain('HP 35, Attack 55, Defense 40, Sp. Atk 50, Sp. Def 50, Speed 90')
-		expect(prompt).toContain('HP 95, Attack 125, Defense 79, Sp. Atk 60, Sp. Def 100, Speed 81')
+	it('leaves types and stats to the brain instead of sending them', () => {
+		expect(prompt).not.toMatch(/electric|water|flying/i)
+		expect(prompt).not.toMatch(/(HP|Attack|Defense|Speed) \d+/)
+	})
+
+	it('tells the chatbot to use the knowledge base\'s stats and type matchups', () => {
+		expect(prompt).toMatch(/knowledge base/i)
+		expect(prompt).toMatch(/stats/i)
+		expect(prompt).toMatch(/type matchups/i)
 	})
 
 	it('asks for a turn-by-turn battle ending with a winner', () => {
