@@ -1,6 +1,7 @@
 import cors from 'cors'
 import express from 'express'
 
+import { BattleController } from './controllers/BattleController.ts'
 import { ContentController } from './controllers/ContentsController.ts'
 import { PokemonController } from './controllers/PokemonController.ts'
 import { errorHandler } from './middlewares/errorHandler.ts'
@@ -22,6 +23,7 @@ app.get('/ping', (_req, res) => {
 })
 app.use('/pokemons', PokemonController)
 app.use('/contents', ContentController)
+app.use('/battles', BattleController)
 
 app.use((_req, res) => {
 	res.status(404).json({ error: 'Route not found' })

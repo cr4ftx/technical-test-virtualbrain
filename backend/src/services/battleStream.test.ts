@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { battleEvents, type BattleEvent } from './battleStream.ts'
+import { battleEvents, sseFrame, type BattleEvent } from './battleStream.ts'
 
 const collect = async (events: AsyncIterable<BattleEvent>): Promise<BattleEvent[]> => {
 	const result: BattleEvent[] = []
@@ -32,5 +32,16 @@ describe('battleEvents', () => {
 			{ type: 'text', text: 'Pikachu uses ' },
 			{ type: 'error', message: 'The battle narration failed, please try again' }
 		])
+	})
+})
+
+describe('sseFrame', () => {
+	it('names the frame after the event type and carries the rest as JSON, newlines included', () => {
+		expect(sseFrame({ type: 'text', text: 'Turn 1:\nPikachu attacks' }))
+			.toBe('event: text\ndata: {"text":"Turn 1:\\nPikachu attacks"}\n\n')
+	})
+
+	it('sends an empty object for an event without data', () => {
+		expect(sseFrame({ type: 'end' })).toBe('event: end\ndata: {}\n\n')
 	})
 })

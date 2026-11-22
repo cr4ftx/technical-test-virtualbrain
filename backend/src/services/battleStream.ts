@@ -15,3 +15,6 @@ export async function* battleEvents(chunks: AsyncIterable<string>): AsyncGenerat
 	}
 	yield { type: 'end' }
 }
+
+/** Encode an event as a Server-Sent Events frame: JSON keeps the narration's newlines from splitting the frame */
+export const sseFrame = ({ type, ...data }: BattleEvent): string => `event: ${type}\ndata: ${JSON.stringify(data)}\n\n`
