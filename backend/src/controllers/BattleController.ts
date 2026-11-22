@@ -61,6 +61,15 @@ const createTurnBasedBattle = async (res: Response, ids: [number, number]) => {
 const randomMove = (moves: BattleMove[]): BattleMove => moves[Math.floor(Math.random() * moves.length)]
 
 /**
+ * How battles are played, so the frontend knows which arena to show: `{ mode: 'one-shot' | 'turn-based' }`
+ * @route GET /battles/mode
+ * @group Battles
+ */
+BattleController.get('/mode', (_req: Request, res: Response) => {
+	res.json({ mode: BATTLE_MODE })
+})
+
+/**
  * Start a battle between two Pokémon, in the mode set by `BATTLE_MODE`.
  * One-shot: streams the chatbot's narration of the whole battle as Server-Sent Events (`text`, then `end` or `error`).
  * Turn-based: answers 201 with `{ battleId, fighters }`, each fighter's HP; rounds are played one by one.
