@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import type { Pokemon } from '../types/pokemon.ts'
 
@@ -24,7 +24,10 @@ export function createPokedexStore({ cacheFile, build }: PokedexStoreOptions) {
 
 		const pokemons = await build()
 		await mkdir(dirname(cacheFile), { recursive: true })
-		await writeFile(cacheFile, JSON.stringify(pokemons))
+		// Rename is atomic: a crash mid-write never leaves a truncated cache for the next boot
+		const tmpFile = `${cacheFile}.tmp`
+		await writeFile(tmpFile, JSON.stringify(pokemons))
+		await rename(tmpFile, cacheFile)
 		return pokemons
 	}
 
@@ -32,7 +35,10 @@ export function createPokedexStore({ cacheFile, build }: PokedexStoreOptions) {
 	let pokedex: Promise<Pokemon[]> | undefined
 
 	const load = (): Promise<Pokemon[]> => {
-		pokedex ??= loadOrBuild()
+		pokedex ??= loadOrBuild().catch((error: unknown) => {
+			pokedex = undefined
+			throw error
+		})
 		return pokedex
 	}
 

@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from 'node:fs/promises'
+import { access, mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -44,5 +44,18 @@ describe('pokedex store', () => {
 
 		expect(await Promise.all(requests)).toEqual([[bulbasaur], [bulbasaur], [bulbasaur]])
 		expect(build).toHaveBeenCalledTimes(1)
+	})
+
+	it('writes nothing when a build fails, and the next request starts a fresh build', async () => {
+		const build = vi.fn<() => Promise<Pokemon[]>>()
+			.mockRejectedValueOnce(new Error('PokeAPI down'))
+			.mockResolvedValueOnce([bulbasaur])
+		const store = createPokedexStore({ cacheFile, build })
+
+		await expect(store.load()).rejects.toThrow('PokeAPI down')
+		await expect(access(cacheFile)).rejects.toMatchObject({ code: 'ENOENT' })
+
+		expect(await store.load()).toEqual([bulbasaur])
+		expect(build).toHaveBeenCalledTimes(2)
 	})
 })
