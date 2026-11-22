@@ -1,26 +1,11 @@
-import { MAX_SELECTED_TYPES, NO_FILTERS, toggleType, type PokemonFilters } from "../utils/filterPokemons";
+import {
+  MAX_SELECTED_TYPES,
+  NO_FILTERS,
+  POKEMON_TYPES,
+  toggleType,
+  type PokemonFilters,
+} from "../utils/filterPokemons";
 import { useTheme } from "./ThemeContext";
-
-const TYPES = [
-  "normal",
-  "fire",
-  "water",
-  "grass",
-  "electric",
-  "ice",
-  "fighting",
-  "poison",
-  "ground",
-  "flying",
-  "psychic",
-  "bug",
-  "rock",
-  "ghost",
-  "dragon",
-  "dark",
-  "steel",
-  "fairy",
-];
 
 interface FilterBarProps {
   filters: PokemonFilters;
@@ -51,7 +36,7 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
         </button>
       </div>
       <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by type (up to 2)">
-        {TYPES.map((type) => {
+        {POKEMON_TYPES.map((type) => {
           const selected = filters.types.includes(type);
           return (
             <button
