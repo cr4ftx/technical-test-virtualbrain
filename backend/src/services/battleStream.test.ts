@@ -33,6 +33,19 @@ describe('battleEvents', () => {
 			{ type: 'error', message: 'The battle narration failed, please try again' }
 		])
 	})
+
+	it('stops quietly when the stream is aborted, since nobody is listening anymore', async () => {
+		const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+		const controller = new AbortController()
+		async function* chunks() {
+			yield 'Pikachu uses '
+			controller.abort()
+			controller.signal.throwIfAborted()
+		}
+
+		expect(await collect(battleEvents(chunks()))).toEqual([{ type: 'text', text: 'Pikachu uses ' }])
+		expect(consoleError).not.toHaveBeenCalled()
+	})
 })
 
 describe('sseFrame', () => {

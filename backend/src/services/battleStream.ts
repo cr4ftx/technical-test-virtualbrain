@@ -8,6 +8,8 @@ export async function* battleEvents(chunks: AsyncIterable<string>): AsyncGenerat
 	try {
 		for await (const text of chunks) yield { type: 'text', text }
 	} catch (error) {
+		// Aborted because the client left: nothing failed, and there is nobody to tell
+		if (error instanceof Error && error.name === 'AbortError') return
 		// The upstream status and message stay in the server logs, the frontend only needs to offer a retry
 		console.error('Battle stream failed:', error instanceof Error ? error.message : error)
 		yield { type: 'error', message: 'The battle narration failed, please try again' }
