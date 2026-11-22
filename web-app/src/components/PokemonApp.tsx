@@ -21,7 +21,7 @@ export default function PokemonApp() {
       <Header />
       {state.status === "loading" && (
         <div role="status" className="text-lg p-8 text-center">
-          <p>Loading Pokemons...</p>
+          <p>Loading Pokémon...</p>
           <p className="text-sm opacity-70">The first launch builds the Pokédex and can take a minute or two.</p>
         </div>
       )}

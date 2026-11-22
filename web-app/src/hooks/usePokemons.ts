@@ -19,7 +19,7 @@ export function usePokemons(): PokemonsState {
       .then((pokemons) => setState({ status: "success", pokemons }))
       .catch((error: unknown) => {
         if (axios.isCancel(error)) return;
-        setState({ status: "error", message: "Could not load Pokemons. Is the backend running?" });
+        setState({ status: "error", message: "Could not load Pokémon. Is the backend running?" });
       });
 
     return () => controller.abort();
