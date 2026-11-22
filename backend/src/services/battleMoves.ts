@@ -1,4 +1,5 @@
 import type { BattleMove } from './battleEngine.ts'
+import { pokeapi } from './pokeapi.ts'
 
 interface NamedResource {
 	name: string
@@ -63,4 +64,26 @@ export const selectBattleMoves = (pokemonMoves: ApiPokemonMove[], details: Reado
 		})
 		.slice(0, MOVES_PER_POKEMON)
 	return moves.length > 0 ? moves : [STRUGGLE]
+}
+
+// Move details never change and are shared by many Pokémon: kept for the server's lifetime
+const moveCache = new Map<string, Promise<ApiMove>>()
+
+const fetchMove = (name: string): Promise<ApiMove> => {
+	let move = moveCache.get(name)
+	if (!move) {
+		move = pokeapi.get<ApiMove>(`/move/${name}`).then(r => r.data)
+		// A failed lookup is retried by the next battle instead of failing every battle with this move
+		move.catch(() => moveCache.delete(name))
+		moveCache.set(name, move)
+	}
+	return move
+}
+
+/** A Pokémon's battle moves, live from PokeAPI */
+export async function fetchBattleMoves(pokemonId: number): Promise<BattleMove[]> {
+	const { data } = await pokeapi.get<{ moves: ApiPokemonMove[] }>(`/pokemon/${pokemonId}`)
+	const names = latestLevelUpMoves(data.moves)
+	const details = await Promise.all(names.map(fetchMove))
+	return selectBattleMoves(data.moves, new Map(details.map(d => [d.name, d])))
 }

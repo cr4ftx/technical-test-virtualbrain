@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest'
-import { selectBattleMoves, type ApiMove, type ApiPokemonMove } from './battleMoves.ts'
+import { AxiosError, type AxiosAdapter, type InternalAxiosRequestConfig } from 'axios'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { fetchBattleMoves, selectBattleMoves, type ApiMove, type ApiPokemonMove } from './battleMoves.ts'
+import { pokeapi } from './pokeapi.ts'
 
 const versionGroup = (id: number) => ({ name: `group-${id}`, url: `https://pokeapi.co/api/v2/version-group/${id}/` })
 
@@ -75,5 +77,53 @@ describe('selectBattleMoves', () => {
 		expect(selectBattleMoves([learned('transform', { 20: 1 })], moves)).toEqual([
 			{ name: 'struggle', power: 50, type: 'normal', accuracy: null, damageClass: 'physical' }
 		])
+	})
+})
+
+/** Adapter answering each PokeAPI path from a fixed table, and 404 for anything else */
+const routedAdapter = (routes: Record<string, unknown>) =>
+	vi.fn<AxiosAdapter>(async (config: InternalAxiosRequestConfig) => {
+		const path = config.url ?? ''
+		if (!(path in routes)) {
+			const response = { data: {}, status: 404, statusText: '', headers: {}, config }
+			throw new AxiosError('Not found', AxiosError.ERR_BAD_REQUEST, config, null, response)
+		}
+		return { data: routes[path], status: 200, statusText: '', headers: {}, config }
+	})
+
+const requestedPaths = (adapter: ReturnType<typeof routedAdapter>) => adapter.mock.calls.map(([config]) => config.url)
+
+const originalAdapter = pokeapi.defaults.adapter
+
+afterEach(() => {
+	pokeapi.defaults.adapter = originalAdapter
+})
+
+describe('fetchBattleMoves', () => {
+	it('fetches the Pokémon\'s latest level-up moves and reuses cached move details for the next Pokémon', async () => {
+		const adapter = routedAdapter({
+			'/pokemon/1': { moves: [learned('vine-whip', { 20: 7 }), learned('cut', { 3: 15 }, 'machine')] },
+			'/pokemon/2': { moves: [learned('vine-whip', { 20: 9 }), learned('razor-leaf', { 20: 12 })] },
+			'/move/vine-whip': { ...move('vine-whip', 45), type: { name: 'grass', url: '' } },
+			'/move/razor-leaf': { ...move('razor-leaf', 55, 'physical', 95), type: { name: 'grass', url: '' } }
+		})
+		pokeapi.defaults.adapter = adapter
+
+		expect(await fetchBattleMoves(1)).toEqual([
+			{ name: 'vine-whip', power: 45, type: 'grass', accuracy: 100, damageClass: 'physical' }
+		])
+		expect((await fetchBattleMoves(2)).map(m => m.name)).toEqual(['razor-leaf', 'vine-whip'])
+		expect(requestedPaths(adapter)).toEqual(['/pokemon/1', '/move/vine-whip', '/pokemon/2', '/move/razor-leaf'])
+	})
+
+	it('does not cache a failed move lookup', async () => {
+		const pokemon = { '/pokemon/3': { moves: [learned('ember', { 20: 4 })] } }
+		pokeapi.defaults.adapter = routedAdapter(pokemon)
+		await expect(fetchBattleMoves(3)).rejects.toThrow()
+
+		const ember = { ...move('ember', 40, 'special'), type: { name: 'fire', url: '' } }
+		pokeapi.defaults.adapter = routedAdapter({ ...pokemon, '/move/ember': ember })
+
+		expect((await fetchBattleMoves(3)).map(m => m.name)).toEqual(['ember'])
 	})
 })
