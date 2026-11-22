@@ -21,7 +21,7 @@ const virtualbrain = VIRTUALBRAIN_TOKEN ? createVirtualBrainClient({ apiKey: VIR
 BattleController.post(
 	'/',
 	async (req: Request, res: Response) => {
-		const [firstId, secondId] = parseBattleRequest(req.body)
+		const { pokemonIds: [firstId, secondId] } = parseBattleRequest(req.body)
 		if (!virtualbrain) throw new HttpError(503, 'Battles are unavailable: VIRTUALBRAIN_TOKEN is not set')
 		// Resolved before the stream opens, so an unknown Pokémon or a PokeAPI outage is still a plain JSON error
 		const [first, second] = await Promise.all([findPokemon(firstId), findPokemon(secondId)])
