@@ -1,29 +1,20 @@
-import React from 'react';
-import { useTheme } from "./ThemeContext";
-import Card from './Card';
+import type { Pokemon } from "../types/pokemon";
+import Card from "./Card";
 
 interface PokemonListProps {
-  pokemons: any[];
+  pokemons: Pokemon[];
 }
 
-const PokemonList: React.FC<PokemonListProps> = ({ pokemons }) => {
-  const { theme } = useTheme();
-
+export default function PokemonList({ pokemons }: PokemonListProps) {
   if (pokemons.length === 0) {
-    return (
-      <div className="flex items-center">
-        <div className="text-lg text-center w-full">No Pokemon found</div>
-      </div>
-    );
+    return <div className="text-lg text-center w-full p-8">No Pokemon found</div>;
   }
 
   return (
-    <div className={`p-4 grid grid-cols-4 gap-10 place-items-center ${theme === 'light' ? '' : 'bg-slate-800'}`}>
-        {pokemons.map((p) => (
-              <Card pokemon={p} />
-        ))}
+    <div className="p-4 w-full max-w-7xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-10 place-items-center">
+      {pokemons.map((p) => (
+        <Card key={p.id} pokemon={p} />
+      ))}
     </div>
   );
-};
-
-export default PokemonList;
+}
