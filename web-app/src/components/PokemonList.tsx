@@ -1,4 +1,5 @@
 import type { PokemonSummary } from "../types/pokemon";
+import { BATTLE_SIZE } from "../utils/battleSelection";
 import Card from "./Card";
 
 interface PokemonListProps {
@@ -12,16 +13,22 @@ export default function PokemonList({ pokemons, selected, onToggle }: PokemonLis
     return <div className="text-lg text-center w-full p-8">No Pokémon found</div>;
   }
 
+  const isFull = selected.length >= BATTLE_SIZE;
+
   return (
     <div className="p-4 w-full max-w-7xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-10 place-items-center">
-      {pokemons.map((p) => (
-        <Card
-          key={p.id}
-          pokemon={p}
-          selected={selected.some((s) => s.id === p.id)}
-          onToggle={() => onToggle(p)}
-        />
-      ))}
+      {pokemons.map((p) => {
+        const isSelected = selected.some((s) => s.id === p.id);
+        return (
+          <Card
+            key={p.id}
+            pokemon={p}
+            selected={isSelected}
+            disabled={!isSelected && isFull}
+            onToggle={() => onToggle(p)}
+          />
+        );
+      })}
     </div>
   );
 }

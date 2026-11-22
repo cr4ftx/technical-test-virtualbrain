@@ -21,6 +21,8 @@ export function useBattleStream(firstId: number, secondId: number) {
   useEffect(() => {
     const controller = new AbortController();
     setState({ status: "streaming", text: "" });
+    // Keeps whatever narration already arrived on screen above the error
+    const fail = (message: string) => setState((s) => ({ status: "error", text: s.text, message }));
 
     const run = async () => {
       const response = await fetch(`${API_URL}/battles`, {
@@ -35,7 +37,7 @@ export function useBattleStream(firstId: number, secondId: number) {
           typeof body === "object" && body !== null && "error" in body && typeof body.error === "string"
             ? body.error
             : CONNECTION_ERROR;
-        setState((s) => ({ status: "error", text: s.text, message }));
+        fail(message);
         return;
       }
 
@@ -47,7 +49,7 @@ export function useBattleStream(firstId: number, secondId: number) {
         for (const event of parser.feed(value)) {
           if (event.type === "text") setState((s) => ({ status: "streaming", text: s.text + event.text }));
           if (event.type === "end") setState((s) => ({ status: "done", text: s.text }));
-          if (event.type === "error") setState((s) => ({ status: "error", text: s.text, message: event.message }));
+          if (event.type === "error") fail(event.message);
         }
       }
       // A stream cut without an end or error frame (backend restarted, network dropped) is a failure too
@@ -55,8 +57,7 @@ export function useBattleStream(firstId: number, secondId: number) {
     };
 
     run().catch(() => {
-      if (controller.signal.aborted) return;
-      setState((s) => ({ status: "error", text: s.text, message: CONNECTION_ERROR }));
+      if (!controller.signal.aborted) fail(CONNECTION_ERROR);
     });
 
     return () => controller.abort();

@@ -9,6 +9,7 @@ interface CardProps {
 
 interface SelectableCardProps extends CardProps {
   selected: boolean;
+  disabled: boolean;
   onToggle: () => void;
 }
 
@@ -23,7 +24,7 @@ export function MiniCard({ pokemon }: CardProps) {
   );
 }
 
-export default function Card({ pokemon, selected, onToggle }: SelectableCardProps) {
+export default function Card({ pokemon, selected, disabled, onToggle }: SelectableCardProps) {
   const { theme } = useTheme();
   const [rotate, setRotate] = useState({ x: 0, y: 0 });
 
@@ -51,8 +52,9 @@ export default function Card({ pokemon, selected, onToggle }: SelectableCardProp
       type="button"
       aria-pressed={selected}
       aria-label={`${selected ? "Deselect" : "Select"} ${pokemon.name} for battle`}
+      disabled={disabled}
       onClick={onToggle}
-      className={`${selected ? "outline outline-4 outline-orange-500 shadow-lg shadow-orange-500/50" : "outline-orange-400 hover:outline-dashed"} relative text-left text-slate-800 bg-gradient-to-r from-amber-300 via-amber-100 to-amber-300 p-1 rounded-2xl w-full max-w-[250px] shadow-md`}
+      className={`${selected ? "outline outline-4 outline-orange-500 shadow-lg shadow-orange-500/50" : "outline-orange-400 hover:outline-dashed"} disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:outline-none relative text-left text-slate-800 bg-gradient-to-r from-amber-300 via-amber-100 to-amber-300 p-1 rounded-2xl w-full max-w-[250px] shadow-md`}
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
       style={{
