@@ -46,7 +46,12 @@ export const renderPokemonMarkdown = (pokemon: Pokemon): string => {
 		...Object.entries(STAT_LABELS).map(([stat, label]) => `| ${label} | ${pokemon.stats[stat as keyof StatBlock]} |`),
 		'',
 		'## Type matchups',
-		...renderMatchups(pokemon.apiResistances)
+		...renderMatchups(pokemon.apiResistances),
+		'',
+		'## Evolutions',
+		'',
+		`- **Pre-evolution:** ${capitalize(pokemon.apiPreEvolution)}`,
+		`- **Evolutions:** ${pokemon.apiEvolutions.map(evolution => capitalize(evolution.name)).join(', ') || 'None'}`
 	]
 	return `${lines.join('\n')}\n`
 }

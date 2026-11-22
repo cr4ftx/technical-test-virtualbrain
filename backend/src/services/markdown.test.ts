@@ -98,4 +98,25 @@ describe('renderPokemonMarkdown', () => {
 		expect(markdown).not.toContain('### Resistances')
 		expect(markdown).not.toContain('### Immunities')
 	})
+
+	it('ends with the pre-evolution and the evolutions', () => {
+		const eevee: Pokemon = {
+			...pikachu,
+			apiPreEvolution: 'none',
+			apiEvolutions: [{ name: 'vaporeon', pokedexId: 134 }, { name: 'jolteon', pokedexId: 135 }]
+		}
+
+		expect(renderPokemonMarkdown(pikachu)).toMatch(
+			/\n## Evolutions\n\n- \*\*Pre-evolution:\*\* Pichu\n- \*\*Evolutions:\*\* Raichu\n$/
+		)
+		expect(renderPokemonMarkdown(eevee)).toMatch(
+			/\n## Evolutions\n\n- \*\*Pre-evolution:\*\* None\n- \*\*Evolutions:\*\* Vaporeon, Jolteon\n$/
+		)
+	})
+
+	it('says None when the Pokémon does not evolve', () => {
+		const tauros: Pokemon = { ...pikachu, apiPreEvolution: 'none', apiEvolutions: [] }
+
+		expect(renderPokemonMarkdown(tauros)).toMatch(/- \*\*Evolutions:\*\* None\n$/)
+	})
 })
