@@ -126,19 +126,19 @@ const findChainLink = (link: ApiChainLink, speciesName: string): ApiChainLink | 
 /**
  * Fetch a pokemon from PokeAPI and adapt it to the legacy pokebuildapi `Pokemon` shape
  */
-export async function fetchPokemon(id: number): Promise<Pokemon> {
-	const { data: pokemon } = await pokeapi.get<ApiPokemon>(`/pokemon/${id}`)
+export async function fetchPokemon(id: number, signal?: AbortSignal): Promise<Pokemon> {
+	const { data: pokemon } = await pokeapi.get<ApiPokemon>(`/pokemon/${id}`, { signal })
 
 	const [types, { data: species }] = await Promise.all([
 		Promise.all(
 			[...pokemon.types]
 				.sort((a, b) => a.slot - b.slot)
-				.map(({ type }) => pokeapi.get<ApiType>(type.url).then(r => r.data))
+				.map(({ type }) => pokeapi.get<ApiType>(type.url, { signal }).then(r => r.data))
 		),
-		pokeapi.get<ApiSpecies>(pokemon.species.url)
+		pokeapi.get<ApiSpecies>(pokemon.species.url, { signal })
 	])
 
-	const { data: evolutionChain } = await pokeapi.get<ApiEvolutionChain>(species.evolution_chain.url)
+	const { data: evolutionChain } = await pokeapi.get<ApiEvolutionChain>(species.evolution_chain.url, { signal })
 
 	const apiEvolutions: Evolution[] = (findChainLink(evolutionChain.chain, species.name)?.evolves_to ?? [])
 		.map(({ species: evolution }) => ({ name: evolution.name, pokedexId: idFromUrl(evolution.url) }))

@@ -14,6 +14,8 @@ const readCache = async (cacheFile: string): Promise<Pokemon[] | undefined> => {
 		return JSON.parse(await readFile(cacheFile, 'utf8')) as Pokemon[]
 	} catch (error) {
 		if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined
+		// A corrupt cache (hand edit, disk full...) would otherwise fail every request until deleted by hand
+		if (error instanceof SyntaxError) return undefined
 		throw error
 	}
 }
@@ -34,18 +36,18 @@ export function createPokedexStore({ cacheFile, build }: PokedexStoreOptions) {
 	}
 
 	// Shared by every caller, so concurrent requests never start a second build
-	let pokedex: Promise<Pokemon[]> | undefined
+	let pending: Promise<Pokemon[]> | undefined
 	let loaded: Pokemon[] | undefined
 
 	const load = (): Promise<Pokemon[]> => {
-		pokedex ??= loadOrBuild().then(
+		pending ??= loadOrBuild().then(
 			pokemons => (loaded = pokemons),
 			(error: unknown) => {
-				pokedex = undefined
+				pending = undefined
 				throw error
 			}
 		)
-		return pokedex
+		return pending
 	}
 
 	/** The dataset if it is already loaded, without triggering or awaiting a build */
@@ -57,7 +59,16 @@ export function createPokedexStore({ cacheFile, build }: PokedexStoreOptions) {
 const CACHE_FILE = join(import.meta.dirname, '../../cache/pokedex.json')
 
 /** Every gen 1–8 pokemon: requests are fired all at once, the PokeAPI client caps how many run */
-const buildPokedex = (): Promise<Pokemon[]> =>
-	Promise.all(Array.from({ length: MAX_POKEMON_ID }, (_, i) => fetchPokemon(i + 1)))
+const buildPokedex = async (): Promise<Pokemon[]> => {
+	const controller = new AbortController()
+	try {
+		return await Promise.all(
+			Array.from({ length: MAX_POKEMON_ID }, (_, i) => fetchPokemon(i + 1, controller.signal))
+		)
+	} finally {
+		// Once one pokemon fails the build is lost: drop the thousands of requests still queued for a slot
+		controller.abort()
+	}
+}
 
 export const pokedex = createPokedexStore({ cacheFile: CACHE_FILE, build: buildPokedex })

@@ -21,10 +21,13 @@ const toSummary = (pokemon: Pokemon): PokemonSummary => ({
  * @route GET /pokemons
  * @group Pokemons
  */
-PokemonController.get('/', async (_req: Request, res: Response) => {
-	const pokemons = await pokedex.load()
-	res.status(200).json({ pokemons: pokemons.map(toSummary) })
-})
+PokemonController.get(
+	'/',
+	async (_req: Request, res: Response) => {
+		const pokemons = await pokedex.load()
+		res.status(200).json({ pokemons: pokemons.map(toSummary) })
+	}
+)
 
 /**
  * Return a pokemon, from the Pokédex cache when it is loaded, otherwise live from PokeAPI
