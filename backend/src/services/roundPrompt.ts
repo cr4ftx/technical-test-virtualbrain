@@ -3,10 +3,11 @@ import { capitalize } from './markdown.ts'
 
 const nameOf = (fighter: Fighter): string => capitalize(fighter.pokemon.name)
 
-const describeFighter = ({ pokemon, hp, maxHp }: Fighter): string => {
+const describeFighter = (fighter: Fighter): string => {
+	const { pokemon, hp, maxHp } = fighter
 	const types = pokemon.apiTypes.map(t => capitalize(t.name)).join('/')
 	const { attack, defense, special_attack, special_defense, speed } = pokemon.stats
-	return `${capitalize(pokemon.name)}: ${types}, HP ${hp}/${maxHp}, Attack ${attack}, Defense ${defense}, `
+	return `${nameOf(fighter)}: ${types}, HP ${hp}/${maxHp}, Attack ${attack}, Defense ${defense}, `
 		+ `Special Attack ${special_attack}, Special Defense ${special_defense}, Speed ${speed}`
 }
 

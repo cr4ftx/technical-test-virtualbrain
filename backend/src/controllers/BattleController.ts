@@ -10,7 +10,7 @@ import { battleEvents, sseFrame } from '../services/battleStream.ts'
 import { findPokemon } from '../services/pokedex.ts'
 import { buildRoundPrompt } from '../services/roundPrompt.ts'
 import { playRound, type TurnBasedBattle } from '../services/turnBasedRound.ts'
-import { createVirtualBrainClient } from '../services/virtualbrain.ts'
+import { createVirtualBrainClient, type Conversation } from '../services/virtualbrain.ts'
 
 const BattleController = Router()
 
@@ -19,8 +19,6 @@ const BATTLE_MODE = parseBattleMode(process.env.BATTLE_MODE)
 
 const VIRTUALBRAIN_TOKEN = process.env.VIRTUALBRAIN_TOKEN
 const virtualbrain = VIRTUALBRAIN_TOKEN ? createVirtualBrainClient({ apiKey: VIRTUALBRAIN_TOKEN }) : undefined
-
-type Conversation = ReturnType<NonNullable<typeof virtualbrain>['openConversation']>
 
 // Turn-based battles in progress, each with the chatbot conversation picking its moves, dropped on KO.
 // A battle abandoned mid-way stays until the server restarts
@@ -121,15 +119,13 @@ BattleController.post(
 		let step = await round.next()
 		for (; !step.done; step = await round.next()) res.write(sseFrame(step.value))
 
+		// No battle back: the narration failed (its `error` event is sent) or the client left, so nothing changes
 		const next = step.value
-		// No round played: the narration failed (its `error` event is sent) or the client left
-		if (!next) {
-			res.end()
-			return
+		if (next) {
+			if (next.state.winner === undefined) battles.set(battleId, { ...next, conversation: battle.conversation })
+			else battles.delete(battleId)
+			res.write(sseFrame({ type: 'end' }))
 		}
-		if (next.state.winner === undefined) battles.set(battleId, { ...next, conversation: battle.conversation })
-		else battles.delete(battleId)
-		res.write(sseFrame({ type: 'end' }))
 		res.end()
 	}
 )

@@ -85,3 +85,6 @@ export function createVirtualBrainClient({ apiKey, fetch = globalThis.fetch, now
 
 	return { streamCompletion, openConversation }
 }
+
+/** A chatbot conversation kept in one session: see `openConversation` */
+export type Conversation = ReturnType<ReturnType<typeof createVirtualBrainClient>['openConversation']>
