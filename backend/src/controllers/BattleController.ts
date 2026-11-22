@@ -50,7 +50,7 @@ const createTurnBasedBattle = async (res: Response, ids: [number, number]) => {
 
 	res.status(201).json({
 		battleId,
-		fighters: [first, second].map(({ hp, maxHp, moves }) => ({ hp, maxHp, moves }))
+		fighters: [first, second].map(({ hp, maxHp }) => ({ hp, maxHp }))
 	})
 }
 
@@ -59,7 +59,7 @@ const randomMove = (moves: BattleMove[]): BattleMove => moves[Math.floor(Math.ra
 /**
  * Start a battle between two Pokémon.
  * One-shot: streams the chatbot's narration of the whole battle as Server-Sent Events (`text`, then `end` or `error`).
- * Turn-based: answers 201 with `{ battleId, fighters }`, each fighter's HP and moves; rounds are played one by one.
+ * Turn-based: answers 201 with `{ battleId, fighters }`, each fighter's HP; rounds are played one by one.
  * @route POST /battles
  * @group Battles
  * @param {object} body.required - `{ pokemonIds: [number, number], mode?: 'one-shot' | 'turn-based' }`

@@ -1,12 +1,13 @@
+import type { BattleFighter } from "../types/battle";
 import type { PokemonSummary } from "../types/pokemon";
 
 interface FighterProps {
   pokemon: PokemonSummary;
   /** Shown as an HP bar in turn-based battles */
-  health?: { hp: number; maxHp: number };
+  health?: BattleFighter;
 }
 
-function HpBar({ hp, maxHp }: { hp: number; maxHp: number }) {
+function HpBar({ hp, maxHp }: BattleFighter) {
   const ratio = hp / maxHp;
   const color = ratio > 0.5 ? "bg-green-500" : ratio > 0.2 ? "bg-yellow-400" : "bg-red-500";
   return (

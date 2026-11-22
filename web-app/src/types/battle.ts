@@ -1,11 +1,5 @@
-/** Mirrors the backend `BattleMove` (backend/src/services/battleEngine.ts) */
-export interface BattleMove {
-  name: string;
-  power: number;
-  type: string;
-  accuracy: number | null;
-  damageClass: "physical" | "special";
-}
+/** Mirrors the backend `BattleMode` (backend/src/services/battleRequest.ts) */
+export type BattleMode = "one-shot" | "turn-based";
 
 export type Side = 0 | 1;
 
@@ -25,11 +19,10 @@ export interface RoundResult {
   winner?: Side;
 }
 
-/** A fighter of a turn-based battle, as `POST /battles` returns it */
+/** A fighter's health in a turn-based battle, as `POST /battles` returns it */
 export interface BattleFighter {
   hp: number;
   maxHp: number;
-  moves: BattleMove[];
 }
 
 /** Mirrors the backend `BattleEvent` (backend/src/services/battleStream.ts): the SSE frames of the battle routes */

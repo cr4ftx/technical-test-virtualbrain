@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { useBattleStream } from "../hooks/useBattleStream";
+import type { BattleMode } from "../types/battle";
 import type { PokemonSummary } from "../types/pokemon";
 import { Fighter } from "./Fighter";
 import { useTheme } from "./ThemeContext";
 import { TurnBasedBattle } from "./TurnBasedBattle";
-
-type BattleMode = "one-shot" | "turn-based";
 
 const MODES: { mode: BattleMode; label: string }[] = [
   { mode: "one-shot", label: "One-shot" },
