@@ -1,18 +1,25 @@
 import { useMemo, useState } from "react";
 import { usePokemons } from "../hooks/usePokemons";
+import type { PokemonSummary } from "../types/pokemon";
+import { toggleSelection } from "../utils/battleSelection";
 import { filterPokemons, NO_FILTERS } from "../utils/filterPokemons";
+import { Arena } from "./Arena";
 import { FilterBar } from "./FilterBar";
 import { Header } from "./Header";
 import PokemonList from "./PokemonList";
+import { SelectionTray } from "./SelectionTray";
 import { useTheme } from "./ThemeContext";
 
 export default function PokemonApp() {
   const state = usePokemons();
   const { theme } = useTheme();
   const [filters, setFilters] = useState(NO_FILTERS);
+  const [selected, setSelected] = useState<PokemonSummary[]>([]);
+  const [inArena, setInArena] = useState(false);
 
   const pokemons = state.status === "success" ? state.pokemons : null;
   const visiblePokemons = useMemo(() => pokemons && filterPokemons(pokemons, filters), [pokemons, filters]);
+  const [first, second] = selected;
 
   return (
     <div
@@ -30,11 +37,20 @@ export default function PokemonApp() {
           {state.message}
         </div>
       )}
-      {visiblePokemons && (
-        <>
-          <FilterBar filters={filters} onChange={setFilters} />
-          <PokemonList pokemons={visiblePokemons} />
-        </>
+      {inArena && first && second ? (
+        <Arena first={first} second={second} onBack={() => setInArena(false)} />
+      ) : (
+        visiblePokemons && (
+          <>
+            <FilterBar filters={filters} onChange={setFilters} />
+            <PokemonList
+              pokemons={visiblePokemons}
+              selected={selected}
+              onToggle={(pokemon) => setSelected((s) => toggleSelection(s, pokemon))}
+            />
+            <SelectionTray selected={selected} onFight={() => setInArena(true)} />
+          </>
+        )
       )}
     </div>
   );

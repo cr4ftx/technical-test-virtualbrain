@@ -1,9 +1,9 @@
 import axios from "axios";
 import type { Pokemon, PokemonSummary } from "../types/pokemon";
 
-export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:3001",
-});
+export const API_URL: string = import.meta.env.VITE_API_URL ?? "http://localhost:3001";
+
+export const api = axios.create({ baseURL: API_URL });
 
 export async function getPokemons(signal?: AbortSignal): Promise<PokemonSummary[]> {
   const { data } = await api.get<{ pokemons: PokemonSummary[] }>("/pokemons", { signal });
