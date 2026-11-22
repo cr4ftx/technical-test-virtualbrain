@@ -1,29 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import type { Pokemon } from '../types/pokemon.ts'
 import { buildBattlePrompt } from './battlePrompt.ts'
+import { testPokemon } from './testPokemon.ts'
 
-const pokemon = (overrides: Pick<Pokemon, 'id' | 'name' | 'apiTypes' | 'stats'>): Pokemon => ({
-	pokedexId: overrides.id,
-	slug: overrides.name,
-	image: '',
-	sprite: '',
-	apiGeneration: 1,
-	apiResistances: [],
-	apiResistancesWithAbilities: [],
-	resistanceModifyingAbilitiesForApi: { name: '', slug: '' },
-	apiEvolutions: [],
-	apiPreEvolution: 'none',
-	...overrides
-})
-
-const pikachu = pokemon({
+const pikachu = testPokemon({
 	id: 25,
 	name: 'pikachu',
 	apiTypes: [{ name: 'electric', image: '' }],
 	stats: { HP: 35, attack: 55, defense: 40, special_attack: 50, special_defense: 50, speed: 90 }
 })
 
-const gyarados = pokemon({
+const gyarados = testPokemon({
 	id: 130,
 	name: 'gyarados',
 	apiTypes: [{ name: 'water', image: '' }, { name: 'flying', image: '' }],

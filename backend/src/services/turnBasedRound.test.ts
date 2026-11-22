@@ -1,28 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { Pokemon } from '../types/pokemon.ts'
 import { createFighter, type BattleMove } from './battleEngine.ts'
 import type { BattleEvent } from './battleStream.ts'
 import { playRound, type TurnBasedBattle } from './turnBasedRound.ts'
-
-const pokemon = (overrides: Pick<Pokemon, 'id' | 'name' | 'stats'>): Pokemon => ({
-	pokedexId: overrides.id,
-	slug: overrides.name,
-	image: '',
-	sprite: '',
-	apiGeneration: 1,
-	apiTypes: [{ name: 'normal', image: '' }],
-	apiResistances: [],
-	apiResistancesWithAbilities: [],
-	resistanceModifyingAbilitiesForApi: { name: '', slug: '' },
-	apiEvolutions: [],
-	apiPreEvolution: 'none',
-	...overrides
-})
+import { testPokemon } from './testPokemon.ts'
 
 const move = (name: string): BattleMove => ({ name, power: 40, type: 'normal', accuracy: 100, damageClass: 'physical' })
 
-const fast = pokemon({ id: 1, name: 'fast', stats: { HP: 100, attack: 50, defense: 50, special_attack: 50, special_defense: 50, speed: 90 } })
-const slow = pokemon({ id: 2, name: 'slow', stats: { HP: 100, attack: 50, defense: 50, special_attack: 50, special_defense: 50, speed: 30 } })
+const fast = testPokemon({ id: 1, name: 'fast', stats: { HP: 100, attack: 50, defense: 50, special_attack: 50, special_defense: 50, speed: 90 } })
+const slow = testPokemon({ id: 2, name: 'slow', stats: { HP: 100, attack: 50, defense: 50, special_attack: 50, special_defense: 50, speed: 30 } })
 
 const battle: TurnBasedBattle = {
 	state: {
