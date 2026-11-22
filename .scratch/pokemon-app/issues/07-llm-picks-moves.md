@@ -16,7 +16,7 @@
 
 ## Comments
 
-**2026-11-22**: Implemented on `swanncastel/07-llm-picks-moves`. Notes against the ticket:
+**2026-11-22**: Implemented on `swanncastel/07-llm-picks-moves` ([PR #10](https://github.com/cr4ftx/technical-test-virtualbrain/pull/10)). Notes against the ticket:
 
 - The API spec in `docs/virtualbrain-openapi.json` covers sessions: `/v1/open-completion/{id}/query` takes an optional `x-session-id` header and answers with `X-Session-Id`, opening a session when the header is missing.
 - **Session opened on the first round, not at creation.** The API only creates a session with a query, so `POST /battles` opens a conversation (`virtualbrain.openConversation()`, no network call) kept in the battle map with the state; round 1's answer names the session and every later round reuses it. Opening it at creation would cost a throwaway LLM call.
