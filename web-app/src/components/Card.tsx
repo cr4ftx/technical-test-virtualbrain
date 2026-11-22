@@ -1,10 +1,10 @@
 import { useMemo, useState, type MouseEvent } from "react";
-import type { Pokemon } from "../types/pokemon";
+import type { PokemonSummary } from "../types/pokemon";
 import { throttle } from "../utils/throttle";
 import { useTheme } from "./ThemeContext";
 
 interface CardProps {
-  pokemon: Pokemon;
+  pokemon: PokemonSummary;
 }
 
 const MAX_TILT_DIVISOR = 10;
@@ -57,7 +57,7 @@ export default function Card({ pokemon }: CardProps) {
             <div className="font-bold capitalize">{pokemon.name}</div>
             <div>HP: {stats.HP}</div>
             <div className="flex gap-1">
-              {pokemon.apiTypes.map((type) => (
+              {pokemon.types.map((type) => (
                 <img key={type.name} src={type.image} alt={type.name} title={type.name} className="w-5" />
               ))}
             </div>

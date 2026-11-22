@@ -52,3 +52,14 @@ export interface Pokemon {
 	apiPreEvolution: string | 'none'
 	apiResistancesWithAbilities: Resistance[]
 }
+
+/** Slim projection of `Pokemon` for the grid: the full list stays small enough to send in one response */
+export interface PokemonSummary {
+	id: number
+	name: string
+	image: string
+	sprite: string
+	types: PokemonType[]
+	stats: StatBlock
+	generation: number
+}
