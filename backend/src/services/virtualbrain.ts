@@ -43,18 +43,45 @@ export function createVirtualBrainClient({ apiKey, fetch = globalThis.fetch, now
 		return session
 	}
 
-	/** Stream the chatbot's answer to `query` as text chunks, as they arrive */
-	async function* streamCompletion(query: string, signal?: AbortSignal): AsyncGenerator<string> {
+	const postQuery = async (query: string, signal?: AbortSignal, sessionId?: string) => {
 		const { accessToken, chatbotId } = await getSession()
 		const response = await fetch(`${VIRTUALBRAIN_URL}/v1/open-completion/${chatbotId}/query`, {
 			method: 'POST',
-			headers: { 'content-type': 'application/json', authorization: `Bearer ${accessToken}` },
+			headers: {
+				'content-type': 'application/json',
+				authorization: `Bearer ${accessToken}`,
+				...(sessionId && { 'x-session-id': sessionId })
+			},
 			body: JSON.stringify({ query }),
 			signal
 		})
 		if (!response.ok || !response.body) throw new Error(`VirtualBrain completion failed: ${response.status}`)
-		yield * response.body.pipeThrough(new TextDecoderStream())
+		return {
+			chunks: response.body.pipeThrough(new TextDecoderStream()),
+			sessionId: response.headers.get('x-session-id') ?? undefined
+		}
 	}
 
-	return { streamCompletion }
+	/** Stream the chatbot's answer to `query` as text chunks, as they arrive */
+	async function* streamCompletion(query: string, signal?: AbortSignal): AsyncGenerator<string> {
+		yield * (await postQuery(query, signal)).chunks
+	}
+
+	/**
+	 * A conversation kept in one chatbot session, so each answer can build on the previous ones.
+	 * The API opens the session on the first query and names it in the `X-Session-Id` response header.
+	 */
+	const openConversation = () => {
+		let sessionId: string | undefined
+		return {
+			/** Stream the chatbot's answer to `query` as text chunks, within the conversation's session */
+			async* stream(query: string, signal?: AbortSignal): AsyncGenerator<string> {
+				const answer = await postQuery(query, signal, sessionId)
+				sessionId ??= answer.sessionId
+				yield * answer.chunks
+			}
+		}
+	}
+
+	return { streamCompletion, openConversation }
 }

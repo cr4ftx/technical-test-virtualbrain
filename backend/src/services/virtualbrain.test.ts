@@ -17,14 +17,22 @@ const textStream = (chunks: (string | Uint8Array)[]) => {
 	})
 }
 
-/** Fake VirtualBrain API: hands out access-1, access-2... and streams `chunks` for every query */
+/**
+ * Fake VirtualBrain API: hands out access-1, access-2... and streams `chunks` for every query.
+ * A query without a session opens session-1, session-2...; one with a session stays in it.
+ */
 const fakeApi = (chunks: (string | Uint8Array)[] = ['ok']) => {
 	let issued = 0
-	return vi.fn(async (input: string | URL | Request, _init?: RequestInit) => {
+	let sessions = 0
+	return vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
 		const url = String(input)
 		if (url === `${API}/v1/auth/api-key/token`) return tokenResponse(`access-${++issued}`)
 		if (url === `${API}/v1/open-completion/${CHATBOT_ID}/query`) {
-			return new Response(textStream(chunks), { status: 201, headers: { 'content-type': 'text/plain' } })
+			const sessionId = new Headers(init?.headers).get('x-session-id') ?? `session-${++sessions}`
+			return new Response(textStream(chunks), {
+				status: 201,
+				headers: { 'content-type': 'text/plain', 'x-session-id': sessionId }
+			})
 		}
 		return new Response('not found', { status: 404 })
 	})
@@ -38,6 +46,9 @@ const collect = async (chunks: AsyncIterable<string>): Promise<string[]> => {
 
 const queryCalls = (fetch: ReturnType<typeof fakeApi>) =>
 	fetch.mock.calls.filter(([url]) => String(url).includes('/open-completion/'))
+
+const sessionHeaders = (fetch: ReturnType<typeof fakeApi>) =>
+	queryCalls(fetch).map(([, init]) => new Headers(init?.headers).get('x-session-id'))
 
 const tokenCalls = (fetch: ReturnType<typeof fakeApi>) =>
 	fetch.mock.calls.filter(([url]) => String(url).endsWith('/api-key/token'))
@@ -106,5 +117,39 @@ describe('VirtualBrain client', () => {
 		const client = createVirtualBrainClient({ apiKey: 'vb_ak_secret', fetch })
 
 		expect((await collect(client.streamCompletion('q'))).join('')).toBe('Pokémon')
+	})
+
+	describe('conversation', () => {
+		it('opens without calling the API', () => {
+			const fetch = fakeApi()
+			createVirtualBrainClient({ apiKey: 'vb_ak_secret', fetch }).openConversation()
+
+			expect(fetch).not.toHaveBeenCalled()
+		})
+
+		it('keeps every query after the first in the session the API opened for it', async () => {
+			const fetch = fakeApi(['Round ', 'one'])
+			const conversation = createVirtualBrainClient({ apiKey: 'vb_ak_secret', fetch }).openConversation()
+
+			expect(await collect(conversation.stream('round 1'))).toEqual(['Round ', 'one'])
+			await collect(conversation.stream('round 2'))
+			await collect(conversation.stream('round 3'))
+
+			expect(sessionHeaders(fetch)).toEqual([null, 'session-1', 'session-1'])
+		})
+
+		it('gives each conversation its own session', async () => {
+			const fetch = fakeApi()
+			const client = createVirtualBrainClient({ apiKey: 'vb_ak_secret', fetch })
+			const first = client.openConversation()
+			const second = client.openConversation()
+
+			await collect(first.stream('a'))
+			await collect(second.stream('b'))
+			await collect(first.stream('c'))
+			await collect(second.stream('d'))
+
+			expect(sessionHeaders(fetch)).toEqual([null, null, 'session-1', 'session-2'])
+		})
 	})
 })
