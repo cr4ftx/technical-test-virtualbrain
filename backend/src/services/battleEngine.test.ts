@@ -65,8 +65,25 @@ describe('computeDamage', () => {
 		expect(computeDamage(pikachu, gyarados, thunderbolt, minRoll)).toBe(111)
 	})
 
+	it('multiplies the damage by 1.5 when the move shares a type with the attacker', () => {
+		const electricTackle: BattleMove = { ...tackle, type: 'electric' }
+		const neutralTarget = { ...gyarados, apiResistances: [] }
+
+		// (22 × 40 × 55/79) / 50 + 2 = 14.25..., then × 1.5 = 21.38...
+		expect(computeDamage(pikachu, neutralTarget, tackle, maxRoll)).toBe(14)
+		expect(computeDamage(pikachu, neutralTarget, electricTackle, maxRoll)).toBe(21)
+	})
+
 	it('deals no damage to an immune defender', () => {
 		expect(computeDamage(pikachu, gyarados, earthquake, maxRoll)).toBe(0)
+	})
+
+	it('deals at least 1 damage to a defender that is not immune', () => {
+		const weakPeck: BattleMove = { name: 'peck', power: 1, type: 'flying', accuracy: 100, damageClass: 'physical' }
+		const wall = { ...gyarados, stats: { ...gyarados.stats, defense: 250 }, apiResistances: resistances({ flying: 0.25 }) }
+
+		// ((22 × 1 × 55/250) / 50 + 2) × 0.25 × 0.85 ≈ 0.43
+		expect(computeDamage(pikachu, wall, weakPeck, minRoll)).toBe(1)
 	})
 })
 

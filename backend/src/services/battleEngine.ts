@@ -29,8 +29,12 @@ export const computeDamage = (attacker: Pokemon, defender: Pokemon, move: Battle
 	// 0 rolls full damage, so a constant 0 source means "always hits, max damage"
 	const roll = 1 - 0.15 * random()
 
+	const multiplier = typeMultiplier(defender, move.type)
+	if (multiplier === 0) return 0
+
 	const base = ((2 * LEVEL / 5 + 2) * move.power * attack / defense) / 50 + 2
-	return Math.floor(base * stab * typeMultiplier(defender, move.type) * roll)
+	// A hit that lands always hurts: 0 damage stays the mark of an immune defender
+	return Math.max(1, Math.floor(base * stab * multiplier * roll))
 }
 
 export interface Fighter {
