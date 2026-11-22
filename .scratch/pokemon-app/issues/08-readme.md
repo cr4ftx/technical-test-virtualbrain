@@ -15,7 +15,7 @@
 
 ## Comments
 
-**2026-11-22**: Implemented on `swanncastel/08-readme`. Notes against the ticket:
+**2026-11-22**: Implemented on `swanncastel/08-readme` ([PR #11](https://github.com/cr4ftx/technical-test-virtualbrain/pull/11)). Notes against the ticket:
 
 - The exercise statement moved to `docs/exercise.md` and is linked from the README.
 - Node 24+ (the current LTS) is listed as the minimum. Type stripping is unflagged from 22.18, but the project is only checked on Node 26.
