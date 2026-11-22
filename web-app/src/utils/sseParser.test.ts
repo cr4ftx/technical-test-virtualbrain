@@ -24,6 +24,35 @@ describe("createSseParser", () => {
     ]);
   });
 
+  it("parses a round result", () => {
+    const parser = createSseParser();
+
+    expect(
+      parser.feed(
+        'event: round\ndata: {"round":2,"actions":[{"attacker":1,"move":"tackle","hit":true,"damage":57,"ko":true}],"hp":[0,25],"winner":1}\n\n'
+      )
+    ).toEqual([
+      {
+        type: "round",
+        round: 2,
+        actions: [{ attacker: 1, move: "tackle", hit: true, damage: 57, ko: true }],
+        hp: [0, 25],
+        winner: 1,
+      },
+    ]);
+  });
+
+  it("skips a round without a valid result", () => {
+    const parser = createSseParser();
+
+    expect(
+      parser.feed(
+        'event: round\ndata: {"round":1,"actions":[],"hp":[12]}\n\n' +
+          'event: round\ndata: {"round":1,"actions":[{"attacker":0,"move":"tackle"}],"hp":[1,2]}\n\n'
+      )
+    ).toEqual([]);
+  });
+
   it("skips frames that are not battle events", () => {
     const parser = createSseParser();
 

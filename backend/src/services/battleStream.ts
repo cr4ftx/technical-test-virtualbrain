@@ -1,5 +1,8 @@
+import type { RoundResult } from './battleEngine.ts'
+
 export type BattleEvent =
 	| { type: 'text', text: string }
+	| ({ type: 'round' } & RoundResult)
 	| { type: 'end' }
 	| { type: 'error', message: string }
 
