@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] Vitest is installed in the backend, with a `test` script that runs and passes
 - [x] The backend loads environment variables from a gitignored `.env` (Node's `--env-file`, no dotenv dependency) in both dev and start scripts
