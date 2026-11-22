@@ -72,3 +72,7 @@ const buildPokedex = async (): Promise<Pokemon[]> => {
 }
 
 export const pokedex = createPokedexStore({ cacheFile: CACHE_FILE, build: buildPokedex })
+
+/** A Pokémon from the Pokédex cache when it is loaded, otherwise live from PokeAPI, without waiting for a build */
+export const findPokemon = async (id: number): Promise<Pokemon> =>
+	pokedex.peek()?.find(p => p.id === id) ?? await fetchPokemon(id)

@@ -1,7 +1,6 @@
 import { type Request, type Response, Router } from 'express'
 import { parsePokemonId } from '../errors.ts'
-import { fetchPokemon } from '../services/pokeapi.ts'
-import { pokedex } from '../services/pokedex.ts'
+import { findPokemon, pokedex } from '../services/pokedex.ts'
 import type { Pokemon, PokemonSummary } from '../types/pokemon.ts'
 
 const PokemonController = Router()
@@ -39,7 +38,7 @@ PokemonController.get(
 	'/:id',
 	async (req: Request<{ id: string }>, res: Response) => {
 		const id = parsePokemonId(req.params.id)
-		const pokemon = pokedex.peek()?.find(p => p.id === id) ?? await fetchPokemon(id)
+		const pokemon = await findPokemon(id)
 		res.status(200).json({ pokemon })
 	}
 )

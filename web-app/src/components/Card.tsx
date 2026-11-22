@@ -7,25 +7,31 @@ interface CardProps {
   pokemon: PokemonSummary;
 }
 
+interface SelectableCardProps extends CardProps {
+  selected: boolean;
+  disabled: boolean;
+  onToggle: () => void;
+}
+
 const MAX_TILT_DIVISOR = 10;
 
 export function MiniCard({ pokemon }: CardProps) {
   return (
-    <div className="bg-amber-300 rounded-2xl p-2 h-[40px] flex items-center">
+    <div className="bg-amber-300 text-slate-800 rounded-2xl p-2 h-[40px] flex items-center">
       <img src={pokemon.sprite || pokemon.image} alt={pokemon.name} className="h-full" />
       <div className="text-center ml-2 capitalize">{pokemon.name}</div>
     </div>
   );
 }
 
-export default function Card({ pokemon }: CardProps) {
+export default function Card({ pokemon, selected, disabled, onToggle }: SelectableCardProps) {
   const { theme } = useTheme();
   const [rotate, setRotate] = useState({ x: 0, y: 0 });
 
   // Stable throttled handler: recreated only if the component remounts
   const onMouseMove = useMemo(
     () =>
-      throttle((e: MouseEvent<HTMLDivElement>) => {
+      throttle((e: MouseEvent<HTMLButtonElement>) => {
         const box = e.currentTarget.getBoundingClientRect();
         const x = e.clientX - box.left;
         const y = e.clientY - box.top;
@@ -42,8 +48,13 @@ export default function Card({ pokemon }: CardProps) {
   const { stats } = pokemon;
 
   return (
-    <div
-      className="bg-gradient-to-r from-amber-300 via-amber-100 to-amber-300 p-1 rounded-2xl w-full max-w-[250px] shadow-md outline-orange-400 hover:outline-dashed"
+    <button
+      type="button"
+      aria-pressed={selected}
+      aria-label={`${selected ? "Deselect" : "Select"} ${pokemon.name} for battle`}
+      disabled={disabled}
+      onClick={onToggle}
+      className={`${selected ? "outline outline-4 outline-orange-500 shadow-lg shadow-orange-500/50" : "outline-orange-400 hover:outline-dashed"} disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:outline-none relative text-left text-slate-800 bg-gradient-to-r from-amber-300 via-amber-100 to-amber-300 p-1 rounded-2xl w-full max-w-[250px] shadow-md`}
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
       style={{
@@ -51,6 +62,11 @@ export default function Card({ pokemon }: CardProps) {
         transition: "all 400ms cubic-bezier(0.03, 0.98, 0.52, 0.99) 0s",
       }}
     >
+      {selected && (
+        <span className="absolute -top-3 -right-3 z-[1] rounded-full bg-orange-500 px-2 py-0.5 text-xs font-bold text-white shadow">
+          Selected
+        </span>
+      )}
       <div className="rounded-2xl bg-gradient-to-br from-black/10 via-white/70 to-black/10">
         <div className="p-4 flex flex-col rounded-2xl">
           <div className="flex gap-3 justify-between items-center">
@@ -73,6 +89,6 @@ export default function Card({ pokemon }: CardProps) {
           <div>Speed: {stats.speed}</div>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
