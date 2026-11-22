@@ -32,4 +32,9 @@ describe("filterPokemons", () => {
     expect(names(filterPokemons(pokedex, { search: "", types: ["flying"] }))).toEqual(["charizard", "pidgey"]);
     expect(names(filterPokemons(pokedex, { search: "", types: ["fire", "flying"] }))).toEqual(["charizard"]);
   });
+
+  it("applies the search and the types together", () => {
+    expect(names(filterPokemons(pokedex, { search: "char", types: ["flying"] }))).toEqual(["charizard"]);
+    expect(names(filterPokemons(pokedex, { search: "bulba", types: ["fire"] }))).toEqual([]);
+  });
 });
