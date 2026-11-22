@@ -1,8 +1,13 @@
-import type { RoundResult } from './battleEngine.ts'
+import type { BattleAction, RoundResult } from './battleEngine.ts'
+
+/** A round as the frontend sees it: each action also says whether its move was picked at random */
+export interface PlayedRound extends Omit<RoundResult, 'actions'> {
+	actions: (BattleAction & { fallback: boolean })[]
+}
 
 export type BattleEvent =
 	| { type: 'text', text: string }
-	| ({ type: 'round' } & RoundResult)
+	| ({ type: 'round' } & PlayedRound)
 	| { type: 'end' }
 	| { type: 'error', message: string }
 

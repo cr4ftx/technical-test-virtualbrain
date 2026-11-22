@@ -15,7 +15,7 @@ const MATCHUP_GROUPS = [
 	{ title: 'Immunities', multipliers: [[0, '×0']] }
 ] as const
 
-const capitalize = (name: string): string => name.charAt(0).toUpperCase() + name.slice(1)
+export const capitalize = (name: string): string => name.charAt(0).toUpperCase() + name.slice(1)
 
 const listNames = (items: { name: string }[]): string => items.map(item => capitalize(item.name)).join(', ')
 

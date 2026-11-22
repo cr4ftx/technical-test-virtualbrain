@@ -58,13 +58,13 @@ describe('sseFrame', () => {
 		const frame = sseFrame({
 			type: 'round',
 			round: 2,
-			actions: [{ attacker: 1, move: 'tackle', hit: true, damage: 57, ko: true }],
+			actions: [{ attacker: 1, move: 'tackle', hit: true, damage: 57, ko: true, fallback: false }],
 			hp: [0, 25],
 			winner: 1
 		})
 
 		expect(frame).toBe(
-			'event: round\ndata: {"round":2,"actions":[{"attacker":1,"move":"tackle","hit":true,"damage":57,"ko":true}],"hp":[0,25],"winner":1}\n\n'
+			'event: round\ndata: {"round":2,"actions":[{"attacker":1,"move":"tackle","hit":true,"damage":57,"ko":true,"fallback":false}],"hp":[0,25],"winner":1}\n\n'
 		)
 	})
 

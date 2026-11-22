@@ -1,25 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import type { Pokemon, Resistance } from '../types/pokemon.ts'
 import { computeDamage, createFighter, maxHp, resolveRound, type BattleMove, type BattleState } from './battleEngine.ts'
+import { testPokemon } from './testPokemon.ts'
 
 /** Only the attacking types a test cares about: every other type hits for neutral damage */
 const resistances = (multipliers: Record<string, number>): Resistance[] =>
 	Object.entries(multipliers).map(([name, damage_multiplier]) => ({ name, damage_multiplier, damage_relation: 'neutral' }))
 
-const pokemon = (overrides: Pick<Pokemon, 'id' | 'name' | 'apiTypes' | 'stats' | 'apiResistances'>): Pokemon => ({
-	pokedexId: overrides.id,
-	slug: overrides.name,
-	image: '',
-	sprite: '',
-	apiGeneration: 1,
-	apiResistancesWithAbilities: overrides.apiResistances,
-	resistanceModifyingAbilitiesForApi: { name: '', slug: '' },
-	apiEvolutions: [],
-	apiPreEvolution: 'none',
-	...overrides
-})
-
-const pikachu = pokemon({
+const pikachu = testPokemon({
 	id: 25,
 	name: 'pikachu',
 	apiTypes: [{ name: 'electric', image: '' }],
@@ -27,7 +15,7 @@ const pikachu = pokemon({
 	apiResistances: resistances({ ground: 2, electric: 0.5 })
 })
 
-const gyarados = pokemon({
+const gyarados = testPokemon({
 	id: 130,
 	name: 'gyarados',
 	apiTypes: [{ name: 'water', image: '' }, { name: 'flying', image: '' }],
