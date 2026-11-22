@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { PokemonSummary } from "../types/pokemon";
-import { filterPokemons } from "./filterPokemons";
+import { filterPokemons, toggleType } from "./filterPokemons";
 
 function pokemon(name: string, types: string[]): PokemonSummary {
   return {
@@ -36,5 +36,19 @@ describe("filterPokemons", () => {
   it("applies the search and the types together", () => {
     expect(names(filterPokemons(pokedex, { search: "char", types: ["flying"] }))).toEqual(["charizard"]);
     expect(names(filterPokemons(pokedex, { search: "bulba", types: ["fire"] }))).toEqual([]);
+  });
+});
+
+describe("toggleType", () => {
+  it("selects an unselected type", () => {
+    expect(toggleType(["fire"], "flying")).toEqual(["fire", "flying"]);
+  });
+
+  it("deselects a selected type", () => {
+    expect(toggleType(["fire", "flying"], "fire")).toEqual(["flying"]);
+  });
+
+  it("ignores a third type, since no Pokémon has three", () => {
+    expect(toggleType(["fire", "flying"], "water")).toEqual(["fire", "flying"]);
   });
 });
