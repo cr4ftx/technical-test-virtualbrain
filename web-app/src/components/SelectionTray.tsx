@@ -21,7 +21,7 @@ export function SelectionTray({ selected, onFight }: SelectionTrayProps) {
           selected[i] ? (
             <MiniCard key={selected[i].id} pokemon={selected[i]} />
           ) : (
-            <div key={i} className="h-[40px] rounded-2xl border-2 border-dashed border-current px-4 flex items-center opacity-50">
+            <div key={`empty-${i}`} className="h-[40px] rounded-2xl border-2 border-dashed border-current px-4 flex items-center opacity-50">
               Pick a Pokémon
             </div>
           )
