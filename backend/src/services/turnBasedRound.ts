@@ -20,7 +20,7 @@ export async function* playRound(
 	random: RandomSource
 ): AsyncGenerator<BattleEvent, TurnBasedBattle | undefined> {
 	const filter = createNarrationFilter()
-	let movesLine: string | undefined
+	let namedMoves: string | undefined
 
 	async function* narration() {
 		for await (const chunk of chunks) {
@@ -28,7 +28,7 @@ export async function* playRound(
 			if (text) yield text
 		}
 		const rest = filter.end()
-		movesLine = rest.movesLine
+		namedMoves = rest.moves
 		if (rest.text) yield rest.text
 	}
 
@@ -42,7 +42,7 @@ export async function* playRound(
 	if (!finished) return undefined
 
 	const [first, second] = battle.state.fighters
-	const picks = pickMoves(movesLine, [first.moves, second.moves], random)
+	const picks = pickMoves(namedMoves, [first.moves, second.moves], random)
 	const { state, result } = resolveRound(battle.state, [picks[0].move, picks[1].move], random)
 	yield {
 		type: 'round',

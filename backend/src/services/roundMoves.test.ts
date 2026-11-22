@@ -12,29 +12,29 @@ const movesets: [BattleMove[], BattleMove[]] = [pikachuMoves, charmanderMoves]
 const thirdMove = () => 0.5
 
 describe('pickMoves', () => {
-	it('picks the moves the LLM named, first Pokémon first', () => {
-		expect(pickMoves('MOVES: thunderbolt | scratch', movesets, thirdMove)).toEqual([
+	it('picks the moves the LLM named on its MOVES line, first Pokémon first', () => {
+		expect(pickMoves('thunderbolt | scratch', movesets, thirdMove)).toEqual([
 			{ move: pikachuMoves[0], fallback: false },
 			{ move: charmanderMoves[1], fallback: false }
 		])
 	})
 
 	it('matches names whatever their case, spacing or emphasis', () => {
-		const [first, second] = pickMoves('**moves:** Quick Attack |  `Flame-Burst`.', movesets, thirdMove)
+		const [first, second] = pickMoves('Quick Attack |  `Flame-Burst`.', movesets, thirdMove)
 
 		expect(first).toEqual({ move: pikachuMoves[1], fallback: false })
 		expect(second).toEqual({ move: charmanderMoves[2], fallback: false })
 	})
 
 	it('falls back to a random valid move for a name the Pokémon does not know', () => {
-		const [first, second] = pickMoves('MOVES: hyper-beam | ember', movesets, thirdMove)
+		const [first, second] = pickMoves('hyper-beam | ember', movesets, thirdMove)
 
 		expect(first).toEqual({ move: pikachuMoves[2], fallback: true })
 		expect(second).toEqual({ move: charmanderMoves[0], fallback: false })
 	})
 
 	it('falls back for a side the line leaves out', () => {
-		const [, second] = pickMoves('MOVES: thunderbolt', movesets, thirdMove)
+		const [, second] = pickMoves('thunderbolt', movesets, thirdMove)
 
 		expect(second).toEqual({ move: charmanderMoves[2], fallback: true })
 	})

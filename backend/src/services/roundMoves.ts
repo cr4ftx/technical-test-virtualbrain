@@ -10,19 +10,16 @@ export interface MovePick {
 const normalize = (name: string): string =>
 	name.toLowerCase().replace(/[*_`'".]/g, ' ').trim().replace(/\s+/g, '-')
 
-const namedMoves = (movesLine: string | undefined): string[] => {
-	const label = movesLine?.match(/MOVES:/i)
-	if (!movesLine || label?.index === undefined) return []
-	return movesLine.slice(label.index + label[0].length).split('|').map(normalize)
-}
-
-/** Each Pokémon's move from the LLM's `MOVES: <move> | <move>` line, or a random valid one when it named none */
+/**
+ * Each Pokémon's move from what the LLM's MOVES line names (`<move> | <move>`, first Pokémon first),
+ * or a random valid one when it named none
+ */
 export const pickMoves = (
-	movesLine: string | undefined,
+	namedMoves: string | undefined,
 	movesets: [BattleMove[], BattleMove[]],
 	random: RandomSource
 ): [MovePick, MovePick] => {
-	const names = namedMoves(movesLine)
+	const names = namedMoves?.split('|').map(normalize) ?? []
 	const pick = (side: 0 | 1): MovePick => {
 		const moves = movesets[side]
 		const named = moves.find(move => normalize(move.name) === names[side])

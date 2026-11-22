@@ -5,6 +5,12 @@ const stripLead = (line: string): string => line.replace(/^[\s*_`]+/, '').toUppe
 
 const isMovesLine = (line: string): boolean => stripLead(line).startsWith(MOVES_LABEL)
 
+// What follows the label, e.g. `thunderbolt | tackle`: the label is the line's first `MOVES:`, whatever its case
+const namedMoves = (line: string): string => {
+	const afterLabel = line.slice(line.toUpperCase().indexOf(MOVES_LABEL) + MOVES_LABEL.length)
+	return afterLabel.replace(/^[\s*_`]+/, '').trim()
+}
+
 const couldBeMovesLine = (line: string): boolean => {
 	const lead = stripLead(line)
 	return MOVES_LABEL.startsWith(lead) || lead.startsWith(MOVES_LABEL)
@@ -18,14 +24,14 @@ const couldBeMovesLine = (line: string): boolean => {
 export function createNarrationFilter() {
 	let line = ''
 	let lineIsNarration = false
-	let movesLine: string | undefined
+	let moves: string | undefined
 
 	const closeLine = (): string => {
 		const closed = line
 		line = ''
 		lineIsNarration = false
 		if (!isMovesLine(closed)) return closed
-		movesLine = closed.trim()
+		moves = namedMoves(closed)
 		return ''
 	}
 
@@ -49,10 +55,10 @@ export function createNarrationFilter() {
 			}
 			return text
 		},
-		/** The narration still held back, and the MOVES line if the LLM wrote one */
-		end(): { text: string, movesLine?: string } {
+		/** The narration still held back, and the moves named on the MOVES line if the LLM wrote one */
+		end(): { text: string, moves?: string } {
 			const text = closeLine()
-			return movesLine === undefined ? { text } : { text, movesLine }
+			return moves === undefined ? { text } : { text, moves }
 		}
 	}
 }
