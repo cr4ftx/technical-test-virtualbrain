@@ -40,7 +40,7 @@ describe('buildBattlePrompt', () => {
 
 	it('leaves types and stats to the brain instead of sending them', () => {
 		expect(prompt).not.toMatch(/electric|water|flying/i)
-		expect(prompt).not.toContain('125')
+		expect(prompt).not.toMatch(/(HP|Attack|Defense|Speed) \d+/)
 	})
 
 	it('tells the chatbot to use the knowledge base\'s stats and type matchups', () => {
