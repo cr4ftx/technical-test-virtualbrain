@@ -1,4 +1,4 @@
-import type { Pokemon, StatBlock } from '../types/pokemon.ts'
+import type { Pokemon, Resistance, StatBlock } from '../types/pokemon.ts'
 
 const STAT_LABELS: Record<keyof StatBlock, string> = {
 	HP: 'HP',
@@ -8,6 +8,24 @@ const STAT_LABELS: Record<keyof StatBlock, string> = {
 	special_defense: 'Special Defense',
 	speed: 'Speed'
 }
+
+const MATCHUP_GROUPS = [
+	{ title: 'Weaknesses', multipliers: [4, 2] },
+	{ title: 'Resistances', multipliers: [0.5, 0.25] },
+	{ title: 'Immunities', multipliers: [0] }
+]
+
+const MULTIPLIER_LABELS: Record<number, string> = { 4: '×4', 2: '×2', 0.5: '×½', 0.25: '×¼', 0: '×0' }
+
+const renderMatchups = (resistances: Resistance[]): string[] =>
+	MATCHUP_GROUPS.flatMap(({ title, multipliers }) => {
+		const rows = multipliers.flatMap(multiplier => {
+			const types = resistances.filter(r => r.damage_multiplier === multiplier)
+			if (types.length === 0) return []
+			return [`- **${MULTIPLIER_LABELS[multiplier]}:** ${types.map(type => capitalize(type.name)).join(', ')}`]
+		})
+		return rows.length === 0 ? [] : ['', `### ${title}`, '', ...rows]
+	})
 
 const capitalize = (name: string): string => name.charAt(0).toUpperCase() + name.slice(1)
 
@@ -25,7 +43,10 @@ export const renderPokemonMarkdown = (pokemon: Pokemon): string => {
 		'',
 		'| Stat | Value |',
 		'| --- | --- |',
-		...Object.entries(STAT_LABELS).map(([stat, label]) => `| ${label} | ${pokemon.stats[stat as keyof StatBlock]} |`)
+		...Object.entries(STAT_LABELS).map(([stat, label]) => `| ${label} | ${pokemon.stats[stat as keyof StatBlock]} |`),
+		'',
+		'## Type matchups',
+		...renderMatchups(pokemon.apiResistances)
 	]
 	return `${lines.join('\n')}\n`
 }
