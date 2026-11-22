@@ -3,7 +3,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fetchBattleMoves, selectBattleMoves, type ApiMove, type ApiPokemonMove } from './battleMoves.ts'
 import { pokeapi } from './pokeapi.ts'
 
-const versionGroup = (id: number) => ({ name: `group-${id}`, url: `https://pokeapi.co/api/v2/version-group/${id}/` })
+// The real names of the groups a test depends on: PokeAPI added the Japanese Gen 1 games after Scarlet/Violet
+const VERSION_GROUP_NAMES: Record<number, string> = { 25: 'scarlet-violet', 28: 'red-green-japan', 29: 'blue-japan' }
+
+const versionGroup = (id: number) => ({
+	name: VERSION_GROUP_NAMES[id] ?? `group-${id}`,
+	url: `https://pokeapi.co/api/v2/version-group/${id}/`
+})
 
 /** A move as listed on a Pokémon: learned by level-up at `level` in each of the given version groups */
 const learned = (name: string, levels: Record<number, number>, method = 'level-up'): ApiPokemonMove => ({
@@ -69,6 +75,24 @@ describe('selectBattleMoves', () => {
 		const moves = details(move('tackle', 40), move('slam', 80), move('pound', 40))
 
 		expect(selectBattleMoves(pokemonMoves, moves).map(m => m.name)).toEqual(['slam', 'tackle'])
+	})
+
+	it('ignores the Japanese Gen 1 games, whose version groups are numbered after the recent ones', () => {
+		const pokemonMoves = [
+			learned('tackle', { 25: 1, 28: 1, 29: 1 }),
+			learned('hyper-fang', { 25: 10 }),
+			learned('bite', { 28: 20, 29: 20 })
+		]
+		const moves = details(move('tackle', 40), move('hyper-fang', 80), move('bite', 60))
+
+		expect(selectBattleMoves(pokemonMoves, moves).map(m => m.name)).toEqual(['hyper-fang', 'tackle'])
+	})
+
+	it('keeps a move learned at several levels once, at its latest level', () => {
+		const pokemonMoves = [learned('tackle', { 20: 1 }), learned('slam', { 20: 10 }), learned('tackle', { 20: 30 })]
+		const moves = details(move('tackle', 40), move('slam', 80))
+
+		expect(selectBattleMoves(pokemonMoves, moves).map(m => m.name)).toEqual(['tackle', 'slam'])
 	})
 
 	it('falls back to struggle for a Pokémon without a damaging level-up move', () => {

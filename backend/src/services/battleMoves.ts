@@ -31,6 +31,10 @@ const MOVES_PER_POKEMON = 4
 // The engine needs at least one move: Pokémon like Ditto learn no damaging move by level-up
 const STRUGGLE: BattleMove = { name: 'struggle', power: 50, type: 'normal', accuracy: null, damageClass: 'physical' }
 
+// PokeAPI numbers these Gen 1 re-releases after Scarlet/Violet: picked as "most recent", they would hand
+// Pokémon missing from the latest games their 1996 learnset
+const LEGACY_VERSION_GROUPS = new Set(['red-green-japan', 'blue-japan'])
+
 const versionGroupId = ({ url }: NamedResource): number => Number(url.split('/').filter(Boolean).pop())
 
 const toBattleMove = (move: ApiMove): BattleMove | undefined => {
@@ -43,15 +47,17 @@ const toBattleMove = (move: ApiMove): BattleMove | undefined => {
 export const latestLevelUpMoves = (pokemonMoves: ApiPokemonMove[]): string[] => {
 	const levelUps = pokemonMoves.flatMap(({ move, version_group_details }) =>
 		version_group_details
-			.filter(d => d.move_learn_method.name === 'level-up')
+			.filter(d => d.move_learn_method.name === 'level-up' && !LEGACY_VERSION_GROUPS.has(d.version_group.name))
 			.map(d => ({ name: move.name, level: d.level_learned_at, group: versionGroupId(d.version_group) })))
 	// Learnsets change between games: mixing levels from several would compare unrelated numbers
 	const latestGroup = Math.max(...levelUps.map(m => m.group))
 
-	return levelUps
+	const names = levelUps
 		.filter(m => m.group === latestGroup)
 		.sort((a, b) => b.level - a.level)
 		.map(m => m.name)
+	// A move learned at several levels is listed once per level: the Set keeps its latest one
+	return [...new Set(names)]
 }
 
 /** The 4 damaging level-up moves the Pokémon learned last, from the details of its moves */
