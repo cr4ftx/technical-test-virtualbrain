@@ -51,3 +51,6 @@ __pycache__
 
 # Eslint
 .eslintcache
+
+# Claude
+.claude/worktrees
