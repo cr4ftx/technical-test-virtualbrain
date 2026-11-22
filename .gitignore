@@ -57,3 +57,6 @@ __pycache__
 
 # Backend Pokédex cache
 backend/cache
+
+# Backend Markdown export
+backend/exports
