@@ -55,3 +55,6 @@ export const renderPokemonMarkdown = (pokemon: Pokemon): string => {
 	]
 	return `${lines.join('\n')}\n`
 }
+
+/** e.g. `0025-pikachu.md`: the padded id keeps a folder listing in Pokédex order */
+export const markdownFileName = (pokemon: Pokemon): string => `${padId(pokemon.id)}-${pokemon.slug}.md`

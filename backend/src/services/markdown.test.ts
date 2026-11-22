@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Pokemon, Resistance } from '../types/pokemon.ts'
-import { renderPokemonMarkdown } from './markdown.ts'
+import { markdownFileName, renderPokemonMarkdown } from './markdown.ts'
 
 const typeImage = 'https://example.test/type.png'
 
@@ -118,5 +118,12 @@ describe('renderPokemonMarkdown', () => {
 		const tauros: Pokemon = { ...pikachu, apiPreEvolution: 'none', apiEvolutions: [] }
 
 		expect(renderPokemonMarkdown(tauros)).toMatch(/- \*\*Evolutions:\*\* None\n$/)
+	})
+})
+
+describe('markdownFileName', () => {
+	it('is the padded id and the slug', () => {
+		expect(markdownFileName(pikachu)).toBe('0025-pikachu.md')
+		expect(markdownFileName({ ...pikachu, id: 122, slug: 'mr-mime' })).toBe('0122-mr-mime.md')
 	})
 })
