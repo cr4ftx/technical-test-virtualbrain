@@ -3,13 +3,15 @@ export type BattleMode = "one-shot" | "turn-based";
 
 export type Side = 0 | 1;
 
-/** Mirrors the backend `BattleAction` and `RoundResult` (backend/src/services/battleEngine.ts) */
+/** Mirrors the backend `PlayedRound` (backend/src/services/battleStream.ts), the `RoundResult` of its engine */
 export interface BattleAction {
   attacker: Side;
   move: string;
   hit: boolean;
   damage: number;
   ko: boolean;
+  /** The LLM named no valid move, so this one was picked at random */
+  fallback: boolean;
 }
 
 export interface RoundResult {

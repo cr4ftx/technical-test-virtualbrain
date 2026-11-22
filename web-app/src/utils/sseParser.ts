@@ -10,7 +10,8 @@ function isBattleAction(value: unknown): value is BattleAction {
     typeof action.move === "string" &&
     typeof action.hit === "boolean" &&
     typeof action.damage === "number" &&
-    typeof action.ko === "boolean"
+    typeof action.ko === "boolean" &&
+    typeof action.fallback === "boolean"
   );
 }
 

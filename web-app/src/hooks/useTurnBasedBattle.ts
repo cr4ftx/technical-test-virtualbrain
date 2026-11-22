@@ -9,12 +9,19 @@ interface Battle {
   fighters: [BattleFighter, BattleFighter];
 }
 
+/** A played round, with the chatbot's narration of how both Pokémon picked their move */
+export interface LoggedRound extends RoundResult {
+  narration: string;
+}
+
 export interface TurnBasedState {
   status: "starting" | "ready" | "playing" | "over" | "error";
   /** Missing until `POST /battles` answers */
   battle?: Battle;
   /** Every round played so far, oldest first */
-  rounds: RoundResult[];
+  rounds: LoggedRound[];
+  /** The narration of the round being played, as it streams */
+  narration: string;
   message?: string;
 }
 
@@ -27,10 +34,11 @@ const errorMessage = (body: unknown): string =>
 
 /**
  * A turn-based battle between two Pokémon: created with `POST /battles`, then played one round at a time,
- * each round read from the SSE stream of `POST /battles/:id/rounds`. Requests are aborted on unmount.
+ * each round read from the SSE stream of `POST /battles/:id/rounds`: the chatbot's narration as it picks the moves,
+ * then the round's result. Requests are aborted on unmount.
  */
 export function useTurnBasedBattle(firstId: number, secondId: number) {
-  const [state, setState] = useState<TurnBasedState>({ status: "starting", rounds: [] });
+  const [state, setState] = useState<TurnBasedState>({ status: "starting", rounds: [], narration: "" });
   const [attempt, setAttempt] = useState(0);
   // Aborts whatever request is in flight when the arena is left
   const controller = useRef<AbortController>(new AbortController());
@@ -38,7 +46,7 @@ export function useTurnBasedBattle(firstId: number, secondId: number) {
   useEffect(() => {
     const current = new AbortController();
     controller.current = current;
-    setState({ status: "starting", rounds: [] });
+    setState({ status: "starting", rounds: [], narration: "" });
 
     api
       .post<{ battleId: string; fighters: [BattleFighter, BattleFighter] }>(
@@ -46,11 +54,18 @@ export function useTurnBasedBattle(firstId: number, secondId: number) {
         { pokemonIds: [firstId, secondId] },
         { signal: current.signal }
       )
-      .then(({ data }) => setState({ status: "ready", battle: { id: data.battleId, fighters: data.fighters }, rounds: [] }))
+      .then(({ data }) =>
+        setState({
+          status: "ready",
+          battle: { id: data.battleId, fighters: data.fighters },
+          rounds: [],
+          narration: "",
+        })
+      )
       .catch((error: unknown) => {
         if (current.signal.aborted) return;
         const message = isAxiosError(error) ? errorMessage(error.response?.data) : CONNECTION_ERROR;
-        setState({ status: "error", rounds: [], message });
+        setState({ status: "error", rounds: [], narration: "", message });
       });
 
     return () => current.abort();
@@ -67,7 +82,8 @@ export function useTurnBasedBattle(firstId: number, secondId: number) {
       return {
         status: result.winner === undefined ? "playing" : "over",
         battle: { ...s.battle, fighters },
-        rounds: [...s.rounds, result],
+        rounds: [...s.rounds, { ...result, narration: s.narration.trim() }],
+        narration: "",
       };
     });
 
@@ -88,6 +104,7 @@ export function useTurnBasedBattle(firstId: number, secondId: number) {
       const { done, value } = await reader.read();
       if (done) break;
       for (const event of parser.feed(value)) {
+        if (event.type === "text") setState((s) => ({ ...s, narration: s.narration + event.text }));
         if (event.type === "round") applyRound(event);
         if (event.type === "end") setState((s) => (s.status === "playing" ? { ...s, status: "ready" } : s));
         if (event.type === "error") failRound(event.message);
@@ -100,7 +117,7 @@ export function useTurnBasedBattle(firstId: number, secondId: number) {
   const nextRound = () => {
     const battleId = state.battle?.id;
     if (!battleId || state.status === "playing" || state.status === "over") return;
-    setState((s) => ({ ...s, status: "playing", message: undefined }));
+    setState((s) => ({ ...s, status: "playing", narration: "", message: undefined }));
     playRound(battleId).catch(() => {
       if (!controller.current.signal.aborted) failRound(CONNECTION_ERROR);
     });

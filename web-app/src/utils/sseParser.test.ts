@@ -24,18 +24,18 @@ describe("createSseParser", () => {
     ]);
   });
 
-  it("parses a round result", () => {
+  it("parses a round result, with whether each move was picked at random", () => {
     const parser = createSseParser();
 
     expect(
       parser.feed(
-        'event: round\ndata: {"round":2,"actions":[{"attacker":1,"move":"tackle","hit":true,"damage":57,"ko":true}],"hp":[0,25],"winner":1}\n\n'
+        'event: round\ndata: {"round":2,"actions":[{"attacker":1,"move":"tackle","hit":true,"damage":57,"ko":true,"fallback":true}],"hp":[0,25],"winner":1}\n\n'
       )
     ).toEqual([
       {
         type: "round",
         round: 2,
-        actions: [{ attacker: 1, move: "tackle", hit: true, damage: 57, ko: true }],
+        actions: [{ attacker: 1, move: "tackle", hit: true, damage: 57, ko: true, fallback: true }],
         hp: [0, 25],
         winner: 1,
       },
@@ -48,7 +48,8 @@ describe("createSseParser", () => {
     expect(
       parser.feed(
         'event: round\ndata: {"round":1,"actions":[],"hp":[12]}\n\n' +
-          'event: round\ndata: {"round":1,"actions":[{"attacker":0,"move":"tackle"}],"hp":[1,2]}\n\n'
+          'event: round\ndata: {"round":1,"actions":[{"attacker":0,"move":"tackle"}],"hp":[1,2]}\n\n' +
+          'event: round\ndata: {"round":1,"actions":[{"attacker":0,"move":"tackle","hit":true,"damage":5,"ko":false}],"hp":[1,2]}\n\n'
       )
     ).toEqual([]);
   });
