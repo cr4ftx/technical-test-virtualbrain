@@ -18,7 +18,7 @@ const readCache = async (cacheFile: string): Promise<Pokemon[] | undefined> => {
 
 /** Full Pokédex dataset, built once and persisted to a JSON cache file */
 export function createPokedexStore({ cacheFile, build }: PokedexStoreOptions) {
-	const load = async (): Promise<Pokemon[]> => {
+	const loadOrBuild = async (): Promise<Pokemon[]> => {
 		const cached = await readCache(cacheFile)
 		if (cached) return cached
 
@@ -26,6 +26,14 @@ export function createPokedexStore({ cacheFile, build }: PokedexStoreOptions) {
 		await mkdir(dirname(cacheFile), { recursive: true })
 		await writeFile(cacheFile, JSON.stringify(pokemons))
 		return pokemons
+	}
+
+	// Shared by every caller, so concurrent requests never start a second build
+	let pokedex: Promise<Pokemon[]> | undefined
+
+	const load = (): Promise<Pokemon[]> => {
+		pokedex ??= loadOrBuild()
+		return pokedex
 	}
 
 	return { load }

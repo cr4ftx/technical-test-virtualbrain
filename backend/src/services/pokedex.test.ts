@@ -32,4 +32,17 @@ describe('pokedex store', () => {
 		expect(build).toHaveBeenCalledTimes(1)
 		expect(rebuild).not.toHaveBeenCalled()
 	})
+
+	it('makes requests arriving during a build await that same build', async () => {
+		const { promise, resolve } = Promise.withResolvers<Pokemon[]>()
+		const build = vi.fn(() => promise)
+		const store = createPokedexStore({ cacheFile, build })
+
+		const requests = [store.load(), store.load(), store.load()]
+		await vi.waitFor(() => expect(build).toHaveBeenCalled())
+		resolve([bulbasaur])
+
+		expect(await Promise.all(requests)).toEqual([[bulbasaur], [bulbasaur], [bulbasaur]])
+		expect(build).toHaveBeenCalledTimes(1)
+	})
 })
