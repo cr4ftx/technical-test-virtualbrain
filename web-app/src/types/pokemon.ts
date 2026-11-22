@@ -53,3 +53,14 @@ export interface Pokemon {
   apiPreEvolution: string;
   apiResistancesWithAbilities: Resistance[];
 }
+
+/** Mirrors the backend `PokemonSummary`: the slim shape `GET /pokemons` lists */
+export interface PokemonSummary {
+  id: number;
+  name: string;
+  image: string;
+  sprite: string;
+  types: PokemonType[];
+  stats: StatBlock;
+  generation: number;
+}

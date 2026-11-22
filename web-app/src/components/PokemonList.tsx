@@ -1,8 +1,8 @@
-import type { Pokemon } from "../types/pokemon";
+import type { PokemonSummary } from "../types/pokemon";
 import Card from "./Card";
 
 interface PokemonListProps {
-  pokemons: Pokemon[];
+  pokemons: PokemonSummary[];
 }
 
 export default function PokemonList({ pokemons }: PokemonListProps) {
