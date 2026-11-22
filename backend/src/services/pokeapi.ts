@@ -1,7 +1,24 @@
-import axios from 'axios'
+import axios, { isAxiosError, type InternalAxiosRequestConfig } from 'axios'
+import { setTimeout as sleep } from 'node:timers/promises'
 import type { DamageRelation, Evolution, Pokemon, Resistance } from '../types/pokemon.ts'
 
 const POKEAPI_URL = 'https://pokeapi.co/api/v2'
+const RETRY_BASE_DELAY_MS = 200
+
+export const pokeapi = axios.create({ baseURL: POKEAPI_URL })
+
+pokeapi.interceptors.response.use(undefined, async (error: unknown) => {
+	if (!isAxiosError(error) || !error.config) throw error
+
+	const config: InternalAxiosRequestConfig & { retryCount?: number } = error.config
+	const status = error.response?.status
+	if (status === undefined || status < 500) throw error
+
+	const retryCount = config.retryCount ?? 0
+	config.retryCount = retryCount + 1
+	await sleep(RETRY_BASE_DELAY_MS * 2 ** retryCount)
+	return pokeapi.request(config)
+})
 
 interface NamedResource {
 	name: string
@@ -89,18 +106,18 @@ const findChainLink = (link: ApiChainLink, speciesName: string): ApiChainLink | 
  * Fetch a pokemon from PokeAPI and adapt it to the legacy pokebuildapi `Pokemon` shape
  */
 export async function fetchPokemon(id: number): Promise<Pokemon> {
-	const { data: pokemon } = await axios.get<ApiPokemon>(`${POKEAPI_URL}/pokemon/${id}`)
+	const { data: pokemon } = await pokeapi.get<ApiPokemon>(`/pokemon/${id}`)
 
 	const [types, { data: species }] = await Promise.all([
 		Promise.all(
 			[...pokemon.types]
 				.sort((a, b) => a.slot - b.slot)
-				.map(({ type }) => axios.get<ApiType>(type.url).then(r => r.data))
+				.map(({ type }) => pokeapi.get<ApiType>(type.url).then(r => r.data))
 		),
-		axios.get<ApiSpecies>(pokemon.species.url)
+		pokeapi.get<ApiSpecies>(pokemon.species.url)
 	])
 
-	const { data: evolutionChain } = await axios.get<ApiEvolutionChain>(species.evolution_chain.url)
+	const { data: evolutionChain } = await pokeapi.get<ApiEvolutionChain>(species.evolution_chain.url)
 
 	const apiEvolutions: Evolution[] = (findChainLink(evolutionChain.chain, species.name)?.evolves_to ?? [])
 		.map(({ species: evolution }) => ({ name: evolution.name, pokedexId: idFromUrl(evolution.url) }))
