@@ -1,6 +1,6 @@
 import { isAxiosError } from 'axios'
 import type { ErrorRequestHandler } from 'express'
-import { HttpError } from '../errors'
+import { HttpError } from '../errors.ts'
 
 /**
  * Last middleware: turns thrown errors into JSON responses.

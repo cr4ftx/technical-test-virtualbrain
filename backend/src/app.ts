@@ -1,9 +1,9 @@
 import cors from 'cors'
 import express from 'express'
 
-import { ContentController } from './controllers/ContentsController'
-import { PokemonController } from './controllers/PokemonController'
-import { errorHandler } from './middlewares/errorHandler'
+import { ContentController } from './controllers/ContentsController.ts'
+import { PokemonController } from './controllers/PokemonController.ts'
+import { errorHandler } from './middlewares/errorHandler.ts'
 
 const PORT = Number(process.env.PORT ?? 3001)
 

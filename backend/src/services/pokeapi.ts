@@ -1,7 +1,37 @@
-import axios from 'axios'
-import type { DamageRelation, Evolution, Pokemon, Resistance } from '../types/pokemon'
+import axios, { AxiosError, isAxiosError, type InternalAxiosRequestConfig } from 'axios'
+import { setTimeout as sleep } from 'node:timers/promises'
+import type { DamageRelation, Evolution, Pokemon, Resistance } from '../types/pokemon.ts'
 
 const POKEAPI_URL = 'https://pokeapi.co/api/v2'
+const RETRY_BASE_DELAY_MS = 200
+const MAX_RETRIES = 3
+
+/** PokeAPI client: every request is retried with exponential backoff on transient failures */
+export const pokeapi = axios.create({
+	baseURL: POKEAPI_URL,
+	// Without it a stalled connection hangs forever instead of failing and being retried
+	timeout: 10_000
+})
+
+/** Network failures (no response, but not a deliberate cancel), rate limiting and server errors */
+const isTransient = (error: AxiosError): boolean => {
+	const status = error.response?.status
+	if (status === undefined) return error.code !== AxiosError.ERR_CANCELED
+	return status === 429 || status >= 500
+}
+
+pokeapi.interceptors.response.use(undefined, async (error: unknown) => {
+	if (!isAxiosError(error) || !error.config || !isTransient(error)) throw error
+
+	const config: InternalAxiosRequestConfig & { retryCount?: number } = error.config
+
+	const retryCount = config.retryCount ?? 0
+	if (retryCount >= MAX_RETRIES) throw error
+
+	config.retryCount = retryCount + 1
+	await sleep(RETRY_BASE_DELAY_MS * 2 ** retryCount)
+	return pokeapi.request(config)
+})
 
 interface NamedResource {
 	name: string
@@ -89,18 +119,18 @@ const findChainLink = (link: ApiChainLink, speciesName: string): ApiChainLink | 
  * Fetch a pokemon from PokeAPI and adapt it to the legacy pokebuildapi `Pokemon` shape
  */
 export async function fetchPokemon(id: number): Promise<Pokemon> {
-	const { data: pokemon } = await axios.get<ApiPokemon>(`${POKEAPI_URL}/pokemon/${id}`)
+	const { data: pokemon } = await pokeapi.get<ApiPokemon>(`/pokemon/${id}`)
 
 	const [types, { data: species }] = await Promise.all([
 		Promise.all(
 			[...pokemon.types]
 				.sort((a, b) => a.slot - b.slot)
-				.map(({ type }) => axios.get<ApiType>(type.url).then(r => r.data))
+				.map(({ type }) => pokeapi.get<ApiType>(type.url).then(r => r.data))
 		),
-		axios.get<ApiSpecies>(pokemon.species.url)
+		pokeapi.get<ApiSpecies>(pokemon.species.url)
 	])
 
-	const { data: evolutionChain } = await axios.get<ApiEvolutionChain>(species.evolution_chain.url)
+	const { data: evolutionChain } = await pokeapi.get<ApiEvolutionChain>(species.evolution_chain.url)
 
 	const apiEvolutions: Evolution[] = (findChainLink(evolutionChain.chain, species.name)?.evolves_to ?? [])
 		.map(({ species: evolution }) => ({ name: evolution.name, pokedexId: idFromUrl(evolution.url) }))
