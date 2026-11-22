@@ -1,4 +1,7 @@
+import { useMemo, useState } from "react";
 import { usePokemons } from "../hooks/usePokemons";
+import { filterPokemons, NO_FILTERS } from "../utils/filterPokemons";
+import { FilterBar } from "./FilterBar";
 import { Header } from "./Header";
 import PokemonList from "./PokemonList";
 import { useTheme } from "./ThemeContext";
@@ -6,6 +9,10 @@ import { useTheme } from "./ThemeContext";
 export default function PokemonApp() {
   const state = usePokemons();
   const { theme } = useTheme();
+  const [filters, setFilters] = useState(NO_FILTERS);
+
+  const pokemons = state.status === "success" ? state.pokemons : null;
+  const visiblePokemons = useMemo(() => pokemons && filterPokemons(pokemons, filters), [pokemons, filters]);
 
   return (
     <div
@@ -14,7 +21,7 @@ export default function PokemonApp() {
       <Header />
       {state.status === "loading" && (
         <div role="status" className="text-lg p-8 text-center">
-          <p>Loading Pokemons...</p>
+          <p>Loading Pokémon...</p>
           <p className="text-sm opacity-70">The first launch builds the Pokédex and can take a minute or two.</p>
         </div>
       )}
@@ -23,7 +30,12 @@ export default function PokemonApp() {
           {state.message}
         </div>
       )}
-      {state.status === "success" && <PokemonList pokemons={state.pokemons} />}
+      {visiblePokemons && (
+        <>
+          <FilterBar filters={filters} onChange={setFilters} />
+          <PokemonList pokemons={visiblePokemons} />
+        </>
+      )}
     </div>
   );
 }
