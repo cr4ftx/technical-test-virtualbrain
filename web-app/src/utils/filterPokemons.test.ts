@@ -27,4 +27,9 @@ describe("filterPokemons", () => {
     expect(names(filterPokemons(pokedex, { search: "ChAr", types: [] }))).toEqual(["charmander", "charizard"]);
     expect(names(filterPokemons(pokedex, { search: "saur", types: [] }))).toEqual(["bulbasaur"]);
   });
+
+  it("keeps only Pokémon having every selected type", () => {
+    expect(names(filterPokemons(pokedex, { search: "", types: ["flying"] }))).toEqual(["charizard", "pidgey"]);
+    expect(names(filterPokemons(pokedex, { search: "", types: ["fire", "flying"] }))).toEqual(["charizard"]);
+  });
 });
