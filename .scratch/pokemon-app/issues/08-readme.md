@@ -18,4 +18,5 @@
 **2026-11-22**: Implemented on `swanncastel/08-readme`. Notes against the ticket:
 
 - The exercise statement moved to `docs/exercise.md` and is linked from the README.
-- Node 24+ is listed as the minimum: the first line with unflagged type stripping. The project is developed and checked on Node 26 only.
+- Node 24+ (the current LTS) is listed as the minimum. Type stripping is unflagged from 22.18, but the project is only checked on Node 26.
+- The boilerplate `backend/README.md` and `web-app/README.md` are deleted: the root README replaces them.

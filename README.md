@@ -33,7 +33,7 @@ cp backend/.env.example backend/.env
 | --- | --- | --- |
 | `PORT` | `3001` | Port the API listens on. |
 | `CORS_ORIGIN` | any origin | Origin allowed to call the API, e.g. `http://localhost:5173`. |
-| `VIRTUALBRAIN_TOKEN` | unset | Chatbot API key (`vb_ak_…`). Without it, `POST /battles` answers 503. See [Build the brain and the chatbot](#build-the-brain-and-the-chatbot). |
+| `VIRTUALBRAIN_TOKEN` | unset | Chatbot API key (`vb_ak_…`). Without it, `POST /battles` answers 503. Replace the example's placeholder or delete the line: any value counts as set. See [Build the brain and the chatbot](#build-the-brain-and-the-chatbot). |
 | `BATTLE_MODE` | `one-shot` | `one-shot` (the chatbot narrates the whole battle) or `turn-based` (the chatbot picks the moves each round, the backend computes the result). Any other value stops the server at boot. |
 
 The backend starts without a `.env` at all, so you can browse the Pokédex before you have a token.
@@ -49,11 +49,11 @@ cd backend && npm run dev    # http://localhost:3001, restarts on change
 cd web-app && npm run dev    # http://localhost:5173
 ```
 
-The first start builds the Pokédex from PokeAPI (a few seconds) and caches it in `backend/cache/pokedex.json`. Later starts read the cache. Delete the file to rebuild it.
+The first start builds the Pokédex from PokeAPI (from a few seconds to a minute or two, depending on PokeAPI) and caches it in `backend/cache/pokedex.json`. Later starts read the cache. Delete the file to rebuild it.
 
 ## Checks
 
-| | Backend (`backend/`) | Web app (`web-app/`) |
+| Check | Backend (`backend/`) | Web app (`web-app/`) |
 | --- | --- | --- |
 | Tests | `npm test` | `npm test` |
 | Lint | `npm run lint` | `npm run lint` |
@@ -82,6 +82,7 @@ The API reference is at [chatbot-api.getvirtualbrain.com/docs](https://chatbot-a
 
 | Route | |
 | --- | --- |
+| `GET /ping` | Health check, answers `pong`. |
 | `GET /pokemons` | Every Pokémon as a summary for the grid. |
 | `GET /pokemons/:id` | One Pokémon in full. |
 | `GET /contents/:pokemonId` | One Pokémon as a Markdown attachment. |
@@ -92,7 +93,7 @@ The API reference is at [chatbot-api.getvirtualbrain.com/docs](https://chatbot-a
 
 ## Design decisions
 
-**Disk cache for the Pokédex.** PokeAPI asks clients to cache responses, and the grid needs all 898 Pokémon at once. The backend builds the full dataset once, with at most 10 requests in flight and retries on failure, then writes it to `backend/cache/pokedex.json`. The write goes to a temp file that is then renamed, so a crash can't leave a truncated cache. A corrupt cache counts as a miss and is rebuilt. Concurrent requests share one build. Single-Pokémon routes don't wait for a cold build: they fall back to a live PokeAPI call.
+**Disk cache for the Pokédex.** PokeAPI asks clients to cache responses, and the grid needs all 898 Pokémon at once. The backend builds the full dataset once, with at most 10 requests in flight and retries on failure, then writes it to `backend/cache/pokedex.json`. A corrupt cache counts as a miss and is rebuilt. Concurrent requests share one build. Single-Pokémon routes don't wait for a cold build: they fall back to a live PokeAPI call.
 
 **Slim list.** `GET /pokemons` sends only what a card shows: name, images, types, stats and generation. Resistances, abilities and evolutions stay behind `GET /pokemons/:id`. Search and type filters run client-side on that list.
 
@@ -107,7 +108,5 @@ The API reference is at [chatbot-api.getvirtualbrain.com/docs](https://chatbot-a
 - A hit that lands always deals at least 1 damage, unless the defender is immune.
 - Moves can miss based on their accuracy. The faster Pokémon acts first, and speed ties are random.
 - Each Pokémon gets its 4 latest damaging level-up moves, or Struggle if it has none.
-
-The randomness source is injected, so the engine is deterministic in tests.
 
 **Move-choice parsing and fallback.** Each round prompt gives the LLM both Pokémon's types, stats, current HP and 4 moves, plus the previous round's result. It asks for a short narration ending with a strict `MOVES: <move> | <move>` line. The narration streams live as `text` events. Only a line that could still turn into `MOVES:` is held back until it is complete, and the `MOVES` line itself is never shown. Parsing is lenient: the label is case-insensitive and may be wrapped in markdown emphasis, and move names ignore case, spaces vs hyphens and stray punctuation. A missing or invalid move is replaced by a random valid one. The `round` event flags it, and the UI shows a "random move" badge. The LLM only picks the moves: the engine always computes the result.
