@@ -54,6 +54,20 @@ describe('sseFrame', () => {
 			.toBe('event: text\ndata: {"text":"Turn 1:\\nPikachu attacks"}\n\n')
 	})
 
+	it('carries a round result as the frame data', () => {
+		const frame = sseFrame({
+			type: 'round',
+			round: 2,
+			actions: [{ attacker: 1, move: 'tackle', hit: true, damage: 57, ko: true }],
+			hp: [0, 25],
+			winner: 1
+		})
+
+		expect(frame).toBe(
+			'event: round\ndata: {"round":2,"actions":[{"attacker":1,"move":"tackle","hit":true,"damage":57,"ko":true}],"hp":[0,25],"winner":1}\n\n'
+		)
+	})
+
 	it('sends an empty object for an event without data', () => {
 		expect(sseFrame({ type: 'end' })).toBe('event: end\ndata: {}\n\n')
 	})
