@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { type Request, type Response, Router } from 'express'
 import { HttpError } from '../errors.ts'
 import { createFighter, resolveRound, type BattleMove, type BattleState } from '../services/battleEngine.ts'
+import { parseBattleMode } from '../services/battleMode.ts'
 import { fetchBattleMoves } from '../services/battleMoves.ts'
 import { buildBattlePrompt } from '../services/battlePrompt.ts'
 import { parseBattleRequest } from '../services/battleRequest.ts'
@@ -10,6 +11,9 @@ import { findPokemon } from '../services/pokedex.ts'
 import { createVirtualBrainClient } from '../services/virtualbrain.ts'
 
 const BattleController = Router()
+
+// Read once at import, so a typo stops the server at boot instead of failing the first battle
+const BATTLE_MODE = parseBattleMode(process.env.BATTLE_MODE)
 
 const VIRTUALBRAIN_TOKEN = process.env.VIRTUALBRAIN_TOKEN
 const virtualbrain = VIRTUALBRAIN_TOKEN ? createVirtualBrainClient({ apiKey: VIRTUALBRAIN_TOKEN }) : undefined
@@ -57,18 +61,18 @@ const createTurnBasedBattle = async (res: Response, ids: [number, number]) => {
 const randomMove = (moves: BattleMove[]): BattleMove => moves[Math.floor(Math.random() * moves.length)]
 
 /**
- * Start a battle between two Pokémon.
+ * Start a battle between two Pokémon, in the mode set by `BATTLE_MODE`.
  * One-shot: streams the chatbot's narration of the whole battle as Server-Sent Events (`text`, then `end` or `error`).
  * Turn-based: answers 201 with `{ battleId, fighters }`, each fighter's HP; rounds are played one by one.
  * @route POST /battles
  * @group Battles
- * @param {object} body.required - `{ pokemonIds: [number, number], mode?: 'one-shot' | 'turn-based' }`
+ * @param {object} body.required - `{ pokemonIds: [number, number] }`
  */
 BattleController.post(
 	'/',
 	async (req: Request, res: Response) => {
-		const { pokemonIds, mode } = parseBattleRequest(req.body)
-		if (mode === 'turn-based') await createTurnBasedBattle(res, pokemonIds)
+		const pokemonIds = parseBattleRequest(req.body)
+		if (BATTLE_MODE === 'turn-based') await createTurnBasedBattle(res, pokemonIds)
 		else await streamOneShotBattle(res, pokemonIds)
 	}
 )
