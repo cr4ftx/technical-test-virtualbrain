@@ -10,26 +10,27 @@ const STAT_LABELS: Record<keyof StatBlock, string> = {
 }
 
 const MATCHUP_GROUPS = [
-	{ title: 'Weaknesses', multipliers: [4, 2] },
-	{ title: 'Resistances', multipliers: [0.5, 0.25] },
-	{ title: 'Immunities', multipliers: [0] }
-]
-
-const MULTIPLIER_LABELS: Record<number, string> = { 4: '×4', 2: '×2', 0.5: '×½', 0.25: '×¼', 0: '×0' }
-
-const renderMatchups = (resistances: Resistance[]): string[] =>
-	MATCHUP_GROUPS.flatMap(({ title, multipliers }) => {
-		const rows = multipliers.flatMap(multiplier => {
-			const types = resistances.filter(r => r.damage_multiplier === multiplier)
-			if (types.length === 0) return []
-			return [`- **${MULTIPLIER_LABELS[multiplier]}:** ${types.map(type => capitalize(type.name)).join(', ')}`]
-		})
-		return rows.length === 0 ? [] : ['', `### ${title}`, '', ...rows]
-	})
+	{ title: 'Weaknesses', multipliers: [[4, '×4'], [2, '×2']] },
+	{ title: 'Resistances', multipliers: [[0.5, '×½'], [0.25, '×¼']] },
+	{ title: 'Immunities', multipliers: [[0, '×0']] }
+] as const
 
 const capitalize = (name: string): string => name.charAt(0).toUpperCase() + name.slice(1)
 
+const listNames = (items: { name: string }[]): string => items.map(item => capitalize(item.name)).join(', ')
+
 const padId = (id: number): string => String(id).padStart(4, '0')
+
+const renderMatchups = (resistances: Resistance[]): string[] => {
+	const groups = MATCHUP_GROUPS.flatMap(({ title, multipliers }) => {
+		const rows = multipliers.flatMap(([multiplier, label]) => {
+			const types = resistances.filter(r => r.damage_multiplier === multiplier)
+			return types.length === 0 ? [] : [`- **${label}:** ${listNames(types)}`]
+		})
+		return rows.length === 0 ? [] : ['', `### ${title}`, '', ...rows]
+	})
+	return groups.length === 0 ? ['', 'None'] : groups
+}
 
 /** A full Pokémon as a Markdown note, ready to import into VirtualBrain */
 export const renderPokemonMarkdown = (pokemon: Pokemon): string => {
@@ -37,7 +38,7 @@ export const renderPokemonMarkdown = (pokemon: Pokemon): string => {
 		`# ${capitalize(pokemon.name)} (#${padId(pokemon.id)})`,
 		'',
 		`- **Generation:** ${pokemon.apiGeneration}`,
-		`- **Types:** ${pokemon.apiTypes.map(type => capitalize(type.name)).join(', ')}`,
+		`- **Types:** ${listNames(pokemon.apiTypes)}`,
 		'',
 		'## Stats',
 		'',
@@ -50,8 +51,8 @@ export const renderPokemonMarkdown = (pokemon: Pokemon): string => {
 		'',
 		'## Evolutions',
 		'',
-		`- **Pre-evolution:** ${capitalize(pokemon.apiPreEvolution)}`,
-		`- **Evolutions:** ${pokemon.apiEvolutions.map(evolution => capitalize(evolution.name)).join(', ') || 'None'}`
+		`- **Pre-evolution:** ${pokemon.apiPreEvolution === 'none' ? 'None' : capitalize(pokemon.apiPreEvolution)}`,
+		`- **Evolutions:** ${listNames(pokemon.apiEvolutions) || 'None'}`
 	]
 	return `${lines.join('\n')}\n`
 }

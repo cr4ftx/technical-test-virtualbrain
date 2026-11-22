@@ -99,6 +99,15 @@ describe('renderPokemonMarkdown', () => {
 		expect(markdown).not.toContain('### Immunities')
 	})
 
+	it('says None under type matchups when every type deals neutral damage', () => {
+		const pokemon: Pokemon = {
+			...pikachu,
+			apiResistances: [{ name: 'normal', damage_multiplier: 1, damage_relation: 'neutral' }]
+		}
+
+		expect(renderPokemonMarkdown(pokemon)).toContain('## Type matchups\n\nNone\n\n## Evolutions')
+	})
+
 	it('ends with the pre-evolution and the evolutions', () => {
 		const eevee: Pokemon = {
 			...pikachu,

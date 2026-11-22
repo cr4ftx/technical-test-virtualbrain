@@ -11,7 +11,7 @@ const ContentController = Router()
 const EXPORT_FOLDER = join(import.meta.dirname, '../../exports/pokemons')
 
 /**
- * Save all pokemon as markdown in the export folder. Waits for the Pokédex build on a cold start.
+ * Save every Pokémon as Markdown in the export folder. Waits for the Pokédex build on a cold start.
  * @route GET /contents/all
  * @group Contents
  */
@@ -24,10 +24,10 @@ ContentController.get(
 )
 
 /**
- * Return a pokemon as a markdown attachment, from the Pokédex cache when it is loaded, otherwise live from PokeAPI
+ * Return a Pokémon as a Markdown attachment, from the Pokédex cache when it is loaded, otherwise live from PokeAPI
  * @route GET /contents/:pokemonId
  * @group Contents
- * @param {number} pokemonId.path.required - Pokemon ID (1 to 898)
+ * @param {number} pokemonId.path.required - Pokémon ID (1 to 898)
  */
 ContentController.get(
 	'/:pokemonId',
