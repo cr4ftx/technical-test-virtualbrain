@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { DamageRelation, Evolution, Pokemon, Resistance } from '../types/pokemon'
+import type { DamageRelation, Evolution, Pokemon, Resistance } from '../types/pokemon.ts'
 
 const POKEAPI_URL = 'https://pokeapi.co/api/v2'
 

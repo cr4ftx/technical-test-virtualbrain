@@ -1,6 +1,6 @@
 import { type Request, type Response, Router } from 'express'
-import { parsePokemonId } from '../errors'
-import { fetchPokemon } from '../services/pokeapi'
+import { parsePokemonId } from '../errors.ts'
+import { fetchPokemon } from '../services/pokeapi.ts'
 
 const PokemonController = Router()
 
