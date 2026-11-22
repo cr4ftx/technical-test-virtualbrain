@@ -34,4 +34,19 @@ describe('renderPokemonMarkdown', () => {
 			/^# Charizard \(#0006\)\n\n- \*\*Generation:\*\* 1\n- \*\*Types:\*\* Fire, Flying\n/
 		)
 	})
+
+	it('lists the six base stats in a table', () => {
+		expect(renderPokemonMarkdown(pikachu)).toContain([
+			'## Stats',
+			'',
+			'| Stat | Value |',
+			'| --- | --- |',
+			'| HP | 35 |',
+			'| Attack | 55 |',
+			'| Defense | 40 |',
+			'| Special Attack | 50 |',
+			'| Special Defense | 50 |',
+			'| Speed | 90 |'
+		].join('\n'))
+	})
 })
