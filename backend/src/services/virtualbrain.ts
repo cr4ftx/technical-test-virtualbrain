@@ -33,7 +33,7 @@ export function createVirtualBrainClient({ apiKey, fetch = globalThis.fetch, now
 		return { accessToken, chatbotId, renewAt: now() + expiresIn * 1000 - TOKEN_RENEWAL_MARGIN_MS }
 	}
 
-	// A promise, so concurrent battles share one exchange instead of each starting their own
+	// Kept as a promise, so battles starting while an exchange is in flight wait for it instead of starting their own
 	let session: Promise<Session> | undefined
 
 	const getSession = async (): Promise<Session> => {

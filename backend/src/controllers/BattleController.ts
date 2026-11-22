@@ -3,16 +3,13 @@ import { HttpError } from '../errors.ts'
 import { buildBattlePrompt } from '../services/battlePrompt.ts'
 import { parseBattleRequest } from '../services/battleRequest.ts'
 import { battleEvents, sseFrame } from '../services/battleStream.ts'
-import { fetchPokemon } from '../services/pokeapi.ts'
-import { pokedex } from '../services/pokedex.ts'
+import { findPokemon } from '../services/pokedex.ts'
 import { createVirtualBrainClient } from '../services/virtualbrain.ts'
 
 const BattleController = Router()
 
 const VIRTUALBRAIN_TOKEN = process.env.VIRTUALBRAIN_TOKEN
 const virtualbrain = VIRTUALBRAIN_TOKEN ? createVirtualBrainClient({ apiKey: VIRTUALBRAIN_TOKEN }) : undefined
-
-const findPokemon = async (id: number) => pokedex.peek()?.find(p => p.id === id) ?? await fetchPokemon(id)
 
 /**
  * Stream the chatbot's narration of a whole battle between two Pokémon, as Server-Sent Events

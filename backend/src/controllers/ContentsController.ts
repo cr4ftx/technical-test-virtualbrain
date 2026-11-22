@@ -3,8 +3,7 @@ import { join } from 'node:path'
 import { parsePokemonId } from '../errors.ts'
 import { markdownFileName, renderPokemonMarkdown } from '../services/markdown.ts'
 import { exportPokedexMarkdown } from '../services/markdownExport.ts'
-import { fetchPokemon } from '../services/pokeapi.ts'
-import { pokedex } from '../services/pokedex.ts'
+import { findPokemon, pokedex } from '../services/pokedex.ts'
 
 const ContentController = Router()
 
@@ -33,7 +32,7 @@ ContentController.get(
 	'/:pokemonId',
 	async (req: Request<{ pokemonId: string }>, res: Response) => {
 		const id = parsePokemonId(req.params.pokemonId)
-		const pokemon = pokedex.peek()?.find(p => p.id === id) ?? await fetchPokemon(id)
+		const pokemon = await findPokemon(id)
 		res.status(200)
 			.attachment(markdownFileName(pokemon))
 			.type('text/markdown; charset=utf-8')
