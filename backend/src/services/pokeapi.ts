@@ -6,7 +6,12 @@ const POKEAPI_URL = 'https://pokeapi.co/api/v2'
 const RETRY_BASE_DELAY_MS = 200
 const MAX_RETRIES = 3
 
-export const pokeapi = axios.create({ baseURL: POKEAPI_URL })
+/** PokeAPI client: every request is retried with exponential backoff on transient failures */
+export const pokeapi = axios.create({
+	baseURL: POKEAPI_URL,
+	// Without it a stalled connection hangs forever instead of failing and being retried
+	timeout: 10_000
+})
 
 /** Network failures (no response, but not a deliberate cancel), rate limiting and server errors */
 const isTransient = (error: AxiosError): boolean => {
