@@ -5,6 +5,8 @@ export interface PokemonFilters {
   types: string[];
 }
 
+export const NO_FILTERS: PokemonFilters = { search: "", types: [] };
+
 export function filterPokemons(pokemons: PokemonSummary[], { search, types }: PokemonFilters): PokemonSummary[] {
   const needle = search.toLowerCase();
   return pokemons.filter(
@@ -14,7 +16,7 @@ export function filterPokemons(pokemons: PokemonSummary[], { search, types }: Po
 }
 
 /** No Pokémon has more than two types, so a third selection could only ever empty the grid */
-const MAX_SELECTED_TYPES = 2;
+export const MAX_SELECTED_TYPES = 2;
 
 export function toggleType(selected: string[], type: string): string[] {
   if (selected.includes(type)) return selected.filter((t) => t !== type);
